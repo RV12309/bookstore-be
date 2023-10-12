@@ -23,6 +23,7 @@ repositories {
 
 ext {
     commonsLang3Version = "3.12.0"
+    modelmapperVersion = "3.1.0"
 }
 
 dependencies {
@@ -44,6 +45,9 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
+    // https://mvnrepository.com/artifact/cn.ipokerface/snowflake-id-generator
+    implementation 'cn.ipokerface:snowflake-id-generator:2.5.0'
+    implementation "org.modelmapper:modelmapper:${modelmapperVersion}"
 }
 
 tasks.named('test') {

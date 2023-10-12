@@ -1,5 +1,6 @@
 package com.hust.bookstore.entity;
 
+import cn.ipokerface.snowflake.SnowflakeIdGenerator;
 import com.hust.bookstore.enumration.UserType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +14,6 @@ import lombok.*;
 @Table(name = "account")
 public class Account extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
@@ -33,4 +33,10 @@ public class Account extends BaseEntity {
     @Column(name = "is_enable")
     @Builder.Default
     private Boolean isEnable = false;
+
+    @PrePersist
+    public void setId() {
+        SnowflakeIdGenerator idGenerator = new SnowflakeIdGenerator(0, 0);
+        this.id = idGenerator.nextId();
+    }
 }
