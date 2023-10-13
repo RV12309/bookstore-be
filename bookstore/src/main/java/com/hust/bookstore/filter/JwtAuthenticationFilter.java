@@ -38,7 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        log.info("Request {} is authenticated.", request.getRequestURI());
+
+        log.info("Authenticating request : {}.", request.getRequestURI());
         final String jwt = authHeader.get().substring(7);
         final String username = jwtTokenProvider.getUserNameFromJWT(jwt);
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
