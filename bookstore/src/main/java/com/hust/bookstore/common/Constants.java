@@ -14,5 +14,8 @@ public class Constants {
 
     public static final String EMAIL = "email";
     public static final String ACTIVE_LINK = "activeLink";
+    public static final String PASSWORD = "password";
+
+    public static final String VERIFICATION_CODE = "verificationCode";
 
 }

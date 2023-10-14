@@ -2,6 +2,7 @@ package com.hust.bookstore.serrvice;
 
 import com.hust.bookstore.dto.request.AccountRequest;
 import com.hust.bookstore.dto.request.UserRequest;
+import com.hust.bookstore.dto.request.VerifyAccountRequest;
 import com.hust.bookstore.dto.response.UserResponse;
 import org.springframework.http.ResponseEntity;
 
@@ -13,6 +14,8 @@ public interface UserService {
     ResponseEntity<Void> deleteUser(Long id);
 
     ResponseEntity<UserResponse> getUser(Long id);
+
+    void verifyAccount(VerifyAccountRequest request);
 
 
 }

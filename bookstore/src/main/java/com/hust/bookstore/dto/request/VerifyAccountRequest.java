@@ -6,13 +6,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class AccountRequest {
+public class VerifyAccountRequest {
     @NotBlank
     private String username;
 
     @NotBlank
-    private String email;
+    private String verificationCode;
 
-    @NotBlank
-    private String password;
 }

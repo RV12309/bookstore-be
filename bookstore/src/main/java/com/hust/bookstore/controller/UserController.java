@@ -1,6 +1,5 @@
 package com.hust.bookstore.controller;
 
-import com.hust.bookstore.dto.UserDto;
 import com.hust.bookstore.dto.request.AccountRequest;
 import com.hust.bookstore.serrvice.UserService;
 import jakarta.validation.Valid;

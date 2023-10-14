@@ -40,6 +40,17 @@ public class Account extends BaseEntity {
     @Builder.Default
     private Boolean isEnabled = false;
 
+    @Column(name = "verification_code")
+    private String verificationCode;
+
+    @Column(name = "is_verified")
+    @Builder.Default
+    private Boolean isVerified = false;
+
+    @Column(name = "verification_expired_at")
+    private LocalDateTime verificationExpiredAt;
+
+
     @PrePersist
     public void setId() {
         SnowflakeIdGenerator idGenerator = new SnowflakeIdGenerator(0, 0);

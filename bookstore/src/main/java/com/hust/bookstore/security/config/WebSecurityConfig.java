@@ -36,6 +36,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs",
                                 "/v1/auth/login","/v1/users/register", "/v1/users/confirm", "/v1/users/forgot-password",
+                                "/v1/users/reset-password", "/v1/accounts/verification",
                                 "/v3/api-docs/swagger-config")
                         .permitAll()
                         .requestMatchers("/v1/sellers/**").hasAnyRole(List.of(ADMIN_ROLE, SELLER_ROLE)
