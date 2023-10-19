@@ -11,6 +11,8 @@ public enum ResponseCode {
     ACCOUNT_ALREADY_ACTIVE("ACC-002", "Tài khoản đã được kích hoạt"),
     VERIFICATION_CODE_EXPIRED("ACC-003", "Mã xác thực đã hết hạn"),
     VERIFICATION_CODE_FAIL("ACC-004", "Mã xác thực không đúng"),
+    ACCOUNT_NOT_VERIFY("ACC-005", "Tài khoản chưa được kích hoạt"),
+    ACCOUNT_LOCKED("ACC-006", "Tài khoản đã bị khóa"),
     ;
 
     private final String code;
