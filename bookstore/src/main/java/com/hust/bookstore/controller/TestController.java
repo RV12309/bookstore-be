@@ -15,10 +15,10 @@ import java.util.Map;
 @Slf4j
 public class TestController {
 
-    @GetMapping("/{name}")
-    public ResponseEntity<Map<String, String>> sayHello(@PathVariable String name){
-        log.info("Saying hello to {}.", name);
-        return ResponseEntity.ok(Map.of("msg", String.format("Welcome %s!", name)));
+    @GetMapping("/ping")
+    public ResponseEntity<Map<String, String>> sayHello(){
+        log.info("Saying hello to book store.");
+        return ResponseEntity.ok(Map.of("msg", String.format("Welcome %s!", "book store")));
     }
     @GetMapping("/sellers/{name}")
     public ResponseEntity<Map<String, String>> sayHelloSeller(@PathVariable String name){

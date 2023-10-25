@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.SecurityBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -34,10 +33,10 @@ public class WebSecurityConfig {
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs",
+                        .requestMatchers("/actuator/**", "/swagger-ui/**", "/v2/api-docs",
                                 "/v1/auth/login","/v1/users/register", "/v1/users/confirm", "/v1/users/forgot-password",
                                 "/v1/users/reset-password", "/v1/accounts/verification",
-                                "/v3/api-docs/swagger-config")
+                                "/v3/api-docs/swagger-config","/v1/ping", "/swagger-ui.html","/v3/api-docs/**")
                         .permitAll()
                         .requestMatchers("/v1/sellers/**").hasAnyRole(List.of(ADMIN_ROLE, SELLER_ROLE)
                                 .toArray(String[]::new))

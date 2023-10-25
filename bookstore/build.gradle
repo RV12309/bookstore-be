@@ -48,6 +48,10 @@ dependencies {
     // https://mvnrepository.com/artifact/cn.ipokerface/snowflake-id-generator
     implementation 'cn.ipokerface:snowflake-id-generator:2.5.0'
     implementation "org.modelmapper:modelmapper:${modelmapperVersion}"
+
+    //swagger
+    implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.0.3'
+    implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.15'
 }
 
 tasks.named('test') {
