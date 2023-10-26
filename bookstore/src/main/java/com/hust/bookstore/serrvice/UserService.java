@@ -1,6 +1,7 @@
 package com.hust.bookstore.serrvice;
 
 import com.hust.bookstore.dto.request.AccountRequest;
+import com.hust.bookstore.dto.request.ForgotPasswordRequest;
 import com.hust.bookstore.dto.request.UserRequest;
 import com.hust.bookstore.dto.request.VerifyAccountRequest;
 import com.hust.bookstore.dto.response.UserResponse;
@@ -18,4 +19,5 @@ public interface UserService {
     void verifyAccount(VerifyAccountRequest request);
 
 
+    void forgotPassword(ForgotPasswordRequest request);
 }

@@ -2,6 +2,7 @@ package com.hust.bookstore.serrvice.impl;
 
 import com.hust.bookstore.common.Utils;
 import com.hust.bookstore.dto.request.AccountRequest;
+import com.hust.bookstore.dto.request.ForgotPasswordRequest;
 import com.hust.bookstore.dto.request.UserRequest;
 import com.hust.bookstore.dto.request.VerifyAccountRequest;
 import com.hust.bookstore.dto.response.UserResponse;
@@ -141,5 +142,21 @@ public class UserServiceImpl implements UserService {
         accountRepository.save(account);
         log.info("Verify account successfully");
 
+    }
+
+    @Override
+    public void forgotPassword(ForgotPasswordRequest request) {
+        Account account = accountRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException(ACCOUNT_NOT_FOUND));
+
+        String newPassword = Utils.randomPassword();
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+
+        Context context = new Context();
+        context.setVariable(USERNAME, account.getUsername());
+        context.setVariable(PASSWORD, newPassword);
+        notificationService.send(MailTemplate.FORGOT_PASSWORD, context, account.getEmail());
     }
 }

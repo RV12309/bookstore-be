@@ -1,5 +1,6 @@
 package com.hust.bookstore.controller;
 
+import com.hust.bookstore.dto.request.ForgotPasswordRequest;
 import com.hust.bookstore.dto.request.VerifyAccountRequest;
 import com.hust.bookstore.dto.response.BaseResponse;
 import com.hust.bookstore.serrvice.UserService;
@@ -25,5 +26,11 @@ public class AccountController {
     public ResponseEntity<BaseResponse<String>> verification(@Valid @RequestBody VerifyAccountRequest request) {
         userService.verifyAccount(request);
         return ResponseEntity.ok(new BaseResponse<>(SUCCESS.code(), SUCCESS.message(), "Verify successfully"));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<BaseResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        userService.forgotPassword(request);
+        return ResponseEntity.ok(new BaseResponse<>(SUCCESS.code(), SUCCESS.message(), "Please check your email"));
     }
 }
