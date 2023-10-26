@@ -14,7 +14,7 @@ import java.util.List;
 @Entity
 @Builder
 @Table(name = "categories")
-public class Categories extends BaseEntity {
+public class Category extends BaseEntity {
     @Id
     private Long id;
 

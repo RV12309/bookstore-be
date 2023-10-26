@@ -13,6 +13,17 @@ public enum ResponseCode {
     VERIFICATION_CODE_FAIL("ACC-004", "Mã xác thực không đúng"),
     ACCOUNT_NOT_VERIFY("ACC-005", "Tài khoản chưa được kích hoạt"),
     ACCOUNT_LOCKED("ACC-006", "Tài khoản đã bị khóa"),
+
+    // Book
+    BOOK_NOT_FOUND("BOK-001", "Không tìm thấy sách"),
+    BOOK_EXISTED("BOK-002", "Sách đã tồn tại"),
+    BOOK_NOT_AVAILABLE("BOK-003", "Sách không còn sẵn có"),
+    BOOK_IS_DELETED("BOK-004", "Sách đã bị xóa"),
+
+    // Category
+    CATEGORY_NOT_FOUND("CAT-001", "Không tìm thấy danh mục"),
+    CATEGORY_ALREADY_EXIST("CAT-002", "Danh mục đã tồn tại"),
+    CATEGORY_IS_IN_USE("CAT-003", "Danh mục đang được sử dụng"),
     ;
 
     private final String code;

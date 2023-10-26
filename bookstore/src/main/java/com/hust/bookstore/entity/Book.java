@@ -39,8 +39,6 @@ public class Book extends BaseEntity {
 
     private String publishDate;
 
-    private String language;
-
     private Long numberOfPages;
 
     private Long price;
@@ -60,7 +58,7 @@ public class Book extends BaseEntity {
             joinColumns = @JoinColumn(name = "book_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
-    private List<Categories> categories;
+    private List<Category> categories;
 
     @PrePersist
     public void setId() {
