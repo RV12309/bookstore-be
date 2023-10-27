@@ -1,6 +1,6 @@
 package com.hust.bookstore.serrvice.impl;
 
-import com.hust.bookstore.serrvice.JwtService;
+import com.hust.bookstore.serrvice.JwtProvider;
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class JwtServiceImpl implements JwtService {
+public class JwtServiceImpl implements JwtProvider {
 
     @Value("${jwt.secret}")
     private String jwtSecret;

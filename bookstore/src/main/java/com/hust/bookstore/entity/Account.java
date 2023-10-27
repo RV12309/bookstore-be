@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 @Entity
 @Builder
 @Table(name = "account")
+@ToString
 public class Account extends BaseEntity {
     @Id
     @Column(name = "id")
@@ -35,6 +36,9 @@ public class Account extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private UserType type;
+
+    @Column(name = "user_id")
+    private Long userId;
 
     @Column(name = "is_enabled")
     @Builder.Default

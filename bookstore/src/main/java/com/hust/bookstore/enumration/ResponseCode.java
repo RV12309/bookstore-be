@@ -13,6 +13,7 @@ public enum ResponseCode {
     VERIFICATION_CODE_FAIL("ACC-004", "Mã xác thực không đúng"),
     ACCOUNT_NOT_VERIFY("ACC-005", "Tài khoản chưa được kích hoạt"),
     ACCOUNT_LOCKED("ACC-006", "Tài khoản đã bị khóa"),
+    INVALID_USERNAME_OR_PASSWORD("ACC-007", "Tên đăng nhập hoặc mật khẩu không đúng"),
 
     // Book
     BOOK_NOT_FOUND("BOK-001", "Không tìm thấy sách"),

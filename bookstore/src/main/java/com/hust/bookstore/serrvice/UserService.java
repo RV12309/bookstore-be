@@ -1,23 +1,32 @@
 package com.hust.bookstore.serrvice;
 
-import com.hust.bookstore.dto.request.AccountRequest;
-import com.hust.bookstore.dto.request.ForgotPasswordRequest;
-import com.hust.bookstore.dto.request.UserRequest;
-import com.hust.bookstore.dto.request.VerifyAccountRequest;
+import com.hust.bookstore.dto.request.*;
+import com.hust.bookstore.dto.response.BaseResponse;
 import com.hust.bookstore.dto.response.UserResponse;
+import com.hust.bookstore.dto.response.UserStatisticResponse;
+import com.hust.bookstore.enumration.UserType;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
 public interface UserService {
-    ResponseEntity<Object> createAccount(AccountRequest request);
+    ResponseEntity<BaseResponse<Object>> createAccount(AccountRequest request, UserType userType);
 
-    ResponseEntity<UserResponse> updateUser(UserRequest request);
+    void updateUser(UpdateUserRequest request);
 
-    ResponseEntity<Void> deleteUser(Long id);
+    void deleteUser(Long id);
 
-    ResponseEntity<UserResponse> getUser(Long id);
+    UserResponse getUser(Long id);
 
     void verifyAccount(VerifyAccountRequest request);
 
 
     void forgotPassword(ForgotPasswordRequest request);
+
+    UserStatisticResponse statisticUser();
+
+    Page<UserResponse> searchUsers(SearchUserRequest request);
+
+    void lockUser(Long id);
+
+    void unlockUser(Long id);
 }

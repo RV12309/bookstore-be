@@ -1,11 +1,11 @@
 package com.hust.bookstore.security;
 
+import com.hust.bookstore.dto.CustomUserDetail;
 import com.hust.bookstore.entity.Account;
 import com.hust.bookstore.enumration.ResponseCode;
 import com.hust.bookstore.exception.BusinessException;
 import com.hust.bookstore.repository.AccountRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,23 +26,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         log.info("Load user by username: {}", username);
 
         Account account = accountRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         log.info("User found with id: {}", account.getId());
-
-        if (Boolean.FALSE.equals(account.getIsVerified())) {
-            throw new BusinessException(ResponseCode.ACCOUNT_NOT_VERIFY);
-        }
-        log.info("User is verified");
-
-        if (Boolean.FALSE.equals(account.getIsEnabled())) {
-            throw new BusinessException(ResponseCode.ACCOUNT_LOCKED);
-        }
-        log.info("User is enabled");
-
-        return User
-                .withUsername(account.getUsername())
-                .password(account.getPassword())
-                .roles(account.getType().toString())
-                .build();
+        return new CustomUserDetail(account);
     }
 }

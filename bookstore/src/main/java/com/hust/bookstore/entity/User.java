@@ -2,10 +2,9 @@ package com.hust.bookstore.entity;
 
 
 import cn.ipokerface.snowflake.SnowflakeIdGenerator;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import com.hust.bookstore.enumration.Gender;
+import com.hust.bookstore.enumration.UserType;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -17,7 +16,7 @@ import java.time.LocalDateTime;
 @Entity
 @Builder
 @Table(name = "users")
-public class User {
+public class User extends BaseEntity{
     @Id
     private Long id;
     private String email;
@@ -25,6 +24,10 @@ public class User {
     private String name;
     private String avatarUrl;
     private LocalDateTime dob;
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+    @Enumerated(EnumType.STRING)
+    private UserType type;
 
     @PrePersist
     public void setId() {

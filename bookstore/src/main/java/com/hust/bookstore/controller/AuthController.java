@@ -3,6 +3,7 @@ package com.hust.bookstore.controller;
 import com.hust.bookstore.dto.request.AuthRequest;
 import com.hust.bookstore.dto.response.BaseResponse;
 import com.hust.bookstore.serrvice.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @Operation(summary = "Đăng nhập")
     @PostMapping("/login")
     ResponseEntity<BaseResponse<Map<String, String>>> login(@Valid @RequestBody AuthRequest request) {
         log.info("Authenticating user {}.", request.getUsername());

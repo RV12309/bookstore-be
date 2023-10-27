@@ -1,5 +1,6 @@
 package com.hust.bookstore.filter;
 
+import com.hust.bookstore.dto.CustomUserDetail;
 import com.hust.bookstore.serrvice.impl.JwtServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -8,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -34,7 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
        log.info("Filtering request {}.", request.getRequestURI());
         Optional<String> authHeader = Optional.ofNullable(request.getHeader("Authorization"));
         if (authHeader.isEmpty() || !authHeader.get().startsWith("Bearer ")) {
-            log.info("Request {} is not authenticated.", request.getRequestURI());
+            log.info("Request {} is not need authenticated.", request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }
@@ -43,9 +43,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt = authHeader.get().substring(7);
         final String username = jwtTokenProvider.getUserNameFromJWT(jwt);
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            CustomUserDetail userDetails = (CustomUserDetail)userDetailsService.loadUserByUsername(username);
             log.info("User {} is authenticated.", userDetails.getUsername());
             if (jwtTokenProvider.validateToken(jwt)) {
+                log.info("Token is valid.");
                 final var authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);

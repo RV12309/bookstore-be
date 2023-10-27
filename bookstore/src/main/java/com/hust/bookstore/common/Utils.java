@@ -1,6 +1,8 @@
 package com.hust.bookstore.common;
 
+import com.hust.bookstore.entity.Book;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
@@ -24,5 +26,23 @@ public class Utils {
         String temp = Normalizer.normalize(regex, Normalizer.Form.NFD);
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
         return pattern.matcher(temp).replaceAll("").toLowerCase(Locale.ROOT);
+    }
+
+    public static String generateIsbn() {
+        String isbn;
+        //generate isbn format EAN-13
+        String isbnFormat = "978" + RandomStringUtils.randomNumeric(9);
+        isbn = isbnFormat.substring(0, 12);
+        int sum = 0;
+        for (int i = 0; i < isbn.length(); i++) {
+            int digit = Integer.parseInt(isbn.substring(i, i + 1));
+            sum += (i % 2 == 0) ? digit * 1 : digit * 3;
+        }
+        int checkDigit = 10 - (sum % 10);
+        if (checkDigit == 10) {
+            checkDigit = 0;
+        }
+        isbn += checkDigit;
+        return isbn;
     }
 }
