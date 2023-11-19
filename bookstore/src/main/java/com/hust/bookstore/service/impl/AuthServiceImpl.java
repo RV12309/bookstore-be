@@ -1,4 +1,4 @@
-package com.hust.bookstore.serrvice.impl;
+package com.hust.bookstore.service.impl;
 
 import com.hust.bookstore.common.Constants;
 import com.hust.bookstore.dto.CustomUserDetail;
@@ -7,8 +7,8 @@ import com.hust.bookstore.entity.Account;
 import com.hust.bookstore.enumration.ResponseCode;
 import com.hust.bookstore.exception.BusinessException;
 import com.hust.bookstore.repository.AccountRepository;
-import com.hust.bookstore.serrvice.AuthService;
-import com.hust.bookstore.serrvice.JwtProvider;
+import com.hust.bookstore.service.AuthService;
+import com.hust.bookstore.service.JwtProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;

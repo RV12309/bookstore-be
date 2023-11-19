@@ -1,7 +1,7 @@
-package com.hust.bookstore.serrvice.impl;
+package com.hust.bookstore.service.impl;
 
 import com.hust.bookstore.enumration.MailTemplate;
-import com.hust.bookstore.serrvice.NotificationService;
+import com.hust.bookstore.service.NotificationService;
 import jakarta.mail.Message;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;

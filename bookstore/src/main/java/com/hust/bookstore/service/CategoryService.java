@@ -1,10 +1,10 @@
-package com.hust.bookstore.serrvice;
+package com.hust.bookstore.service;
 
+import com.hust.bookstore.dto.PageDto;
 import com.hust.bookstore.dto.request.CategoryRequest;
 import com.hust.bookstore.dto.request.SearchCategoryRequest;
 import com.hust.bookstore.dto.request.UpdateCategoryRequest;
 import com.hust.bookstore.dto.response.CategoryResponse;
-import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -19,6 +19,6 @@ public interface CategoryService {
 
     List<CategoryResponse> getAll();
 
-    Page<CategoryResponse> searchCategories(SearchCategoryRequest request);
+    PageDto<CategoryResponse> searchCategories(SearchCategoryRequest request);
 
 }

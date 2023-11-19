@@ -1,4 +1,4 @@
-package com.hust.bookstore.serrvice;
+package com.hust.bookstore.service;
 
 import com.hust.bookstore.dto.request.*;
 import com.hust.bookstore.dto.response.BaseResponse;

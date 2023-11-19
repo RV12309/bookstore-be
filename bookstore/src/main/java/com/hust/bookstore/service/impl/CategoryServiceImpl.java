@@ -1,5 +1,6 @@
-package com.hust.bookstore.serrvice.impl;
+package com.hust.bookstore.service.impl;
 
+import com.hust.bookstore.dto.PageDto;
 import com.hust.bookstore.dto.request.CategoryRequest;
 import com.hust.bookstore.dto.request.SearchCategoryRequest;
 import com.hust.bookstore.dto.request.UpdateCategoryRequest;
@@ -8,7 +9,7 @@ import com.hust.bookstore.entity.Category;
 import com.hust.bookstore.enumration.ResponseCode;
 import com.hust.bookstore.exception.BusinessException;
 import com.hust.bookstore.repository.CategoryRepository;
-import com.hust.bookstore.serrvice.CategoryService;
+import com.hust.bookstore.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
@@ -94,11 +95,18 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public Page<CategoryResponse> searchCategories(SearchCategoryRequest request) {
+    public PageDto<CategoryResponse> searchCategories(SearchCategoryRequest request) {
         String name = StringUtils.isBlank(request.getName()) ? "%" : "%" + request.getName() + "%";
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
         Page<Category> categories = categoryRepository.findByNameLike(name, pageable);
-        return categories.map(category -> modelMapper.map(category, CategoryResponse.class));
+        List<Category> content = categories.getContent();
+        return PageDto.<CategoryResponse>builder()
+                .content(content.stream().map(category ->
+                        modelMapper.map(category, CategoryResponse.class)).toList())
+                .page(categories.getNumber())
+                .totalPages(categories.getTotalPages())
+                .totalElements(categories.getTotalElements())
+                .build();
     }
 
     private Category getExistedCategory(Long id) {

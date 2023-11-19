@@ -2,7 +2,7 @@ package com.hust.bookstore.controller;
 
 import com.hust.bookstore.dto.request.AuthRequest;
 import com.hust.bookstore.dto.response.BaseResponse;
-import com.hust.bookstore.serrvice.AuthService;
+import com.hust.bookstore.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;

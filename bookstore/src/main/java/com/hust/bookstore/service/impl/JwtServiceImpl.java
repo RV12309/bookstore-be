@@ -1,6 +1,6 @@
-package com.hust.bookstore.serrvice.impl;
+package com.hust.bookstore.service.impl;
 
-import com.hust.bookstore.serrvice.JwtProvider;
+import com.hust.bookstore.service.JwtProvider;
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

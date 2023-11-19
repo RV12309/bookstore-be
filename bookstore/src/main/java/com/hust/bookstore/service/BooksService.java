@@ -1,5 +1,6 @@
-package com.hust.bookstore.serrvice;
+package com.hust.bookstore.service;
 
+import com.hust.bookstore.dto.PageDto;
 import com.hust.bookstore.dto.request.BookRequest;
 import com.hust.bookstore.dto.request.SearchBookRequest;
 import com.hust.bookstore.dto.request.UpdateBookRequest;
@@ -12,6 +13,6 @@ public interface BooksService {
     void delete(String isbn);
     BookResponse getDetail(String isbn);
     Page<BookResponse> getAllBooks();
-    Page<BookResponse> searchBooks( SearchBookRequest request);
+    PageDto<BookResponse> searchBooks(SearchBookRequest request);
 
 }

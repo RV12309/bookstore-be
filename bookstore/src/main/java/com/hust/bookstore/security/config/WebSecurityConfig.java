@@ -27,6 +27,14 @@ import static com.hust.bookstore.common.Constants.*;
 @Configuration
 @RequiredArgsConstructor
 public class WebSecurityConfig {
+    public static final String[] NOT_NEAD_AUTH_ENDPOINT = {"/actuator/**", "/swagger-ui/**", "/v3/api-docs",
+            "/v1/auth/login", "/v1/users/register", "/v1/users/confirm",
+            "/v1/accounts/forgot-password",
+            "/v1/users/reset-password", "/v1/accounts/verification",
+            "/v3/api-docs/swagger-config", "/v1/ping", "/v1/home/**",
+            "/v1/customers/register", "/v1/sellers/register",
+            "/v1/books/**", "/v1/categories/all", "/v1/shopping-cart/**", "/v1/delivery/**", "/v1/orders/**"};
+
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -36,12 +44,7 @@ public class WebSecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs",
-                                "/v1/auth/login", "/v1/users/register", "/v1/users/confirm",
-                                "/v1/accounts/forgot-password",
-                                "/v1/users/reset-password", "/v1/accounts/verification",
-                                "/v3/api-docs/swagger-config", "/v1/ping", "/v1/home/**",
-                                "/v1/customers/register", "/v1/sellers/register")
+                        .requestMatchers(NOT_NEAD_AUTH_ENDPOINT)
                         .permitAll()
                         .requestMatchers("/v1/sellers/**").hasAnyRole(List.of(ADMIN_ROLE, SELLER_ROLE)
                                 .toArray(String[]::new))

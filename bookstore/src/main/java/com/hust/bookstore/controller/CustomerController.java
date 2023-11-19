@@ -4,7 +4,7 @@ import com.hust.bookstore.dto.request.AccountRequest;
 import com.hust.bookstore.dto.request.UpdateUserRequest;
 import com.hust.bookstore.dto.response.BaseResponse;
 import com.hust.bookstore.enumration.UserType;
-import com.hust.bookstore.serrvice.UserService;
+import com.hust.bookstore.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

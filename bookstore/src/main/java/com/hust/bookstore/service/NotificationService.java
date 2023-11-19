@@ -1,4 +1,4 @@
-package com.hust.bookstore.serrvice;
+package com.hust.bookstore.service;
 
 import com.hust.bookstore.enumration.MailTemplate;
 import org.thymeleaf.context.Context;

@@ -1,7 +1,7 @@
 package com.hust.bookstore.filter;
 
 import com.hust.bookstore.dto.CustomUserDetail;
-import com.hust.bookstore.serrvice.impl.JwtServiceImpl;
+import com.hust.bookstore.service.impl.JwtServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

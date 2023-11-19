@@ -1,4 +1,4 @@
-package com.hust.bookstore.serrvice;
+package com.hust.bookstore.service;
 
 import org.springframework.security.core.userdetails.UserDetails;
 

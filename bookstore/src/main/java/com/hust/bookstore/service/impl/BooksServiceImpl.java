@@ -1,5 +1,6 @@
-package com.hust.bookstore.serrvice.impl;
+package com.hust.bookstore.service.impl;
 
+import com.hust.bookstore.dto.PageDto;
 import com.hust.bookstore.dto.request.BookRequest;
 import com.hust.bookstore.dto.request.SearchBookRequest;
 import com.hust.bookstore.dto.request.UpdateBookRequest;
@@ -8,10 +9,9 @@ import com.hust.bookstore.entity.*;
 import com.hust.bookstore.enumration.ResponseCode;
 import com.hust.bookstore.exception.BusinessException;
 import com.hust.bookstore.repository.*;
-import com.hust.bookstore.serrvice.AuthService;
-import com.hust.bookstore.serrvice.BooksService;
+import com.hust.bookstore.service.AuthService;
+import com.hust.bookstore.service.BooksService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -143,7 +143,7 @@ public class BooksServiceImpl implements BooksService {
     }
 
     @Override
-    public Page<BookResponse> searchBooks(SearchBookRequest request) {
+    public PageDto<BookResponse> searchBooks(SearchBookRequest request) {
         String title = StringUtils.isBlank(request.getTitle()) ? "%" : "%" + request.getTitle() + "%";
         String author = StringUtils.isBlank(request.getAuthor()) ? "%" : "%" + request.getAuthor() + "%";
         request.setTitle(title);
@@ -158,6 +158,14 @@ public class BooksServiceImpl implements BooksService {
 
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize()).withSort(sortBy);
         Page<Book> books = bookRepository.searchBooks(request, pageable);
-        return books.map(book -> modelMapper.map(book, BookResponse.class));
+        List<Book> content = books.getContent();
+        List<BookResponse> bookResponses = content.stream().map(book -> modelMapper.map(book, BookResponse.class)).toList();
+
+        return PageDto.<BookResponse>builder().content(bookResponses)
+                .totalElements(books.getTotalElements())
+                .totalPages(books.getTotalPages())
+                .page(books.getNumber())
+                .size(books.getSize())
+                .build();
     }
 }

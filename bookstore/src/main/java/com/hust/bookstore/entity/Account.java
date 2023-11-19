@@ -17,7 +17,11 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Builder
-@Table(name = "account")
+@Table(name = "account",indexes = {
+        @Index(name = "account_username_index", columnList = "username"),
+        @Index(name = "account_email_index", columnList = "email"),
+        @Index(name = "account_user_id_index", columnList = "user_id")
+})
 @ToString
 public class Account extends BaseEntity {
     @Id
@@ -54,6 +58,9 @@ public class Account extends BaseEntity {
     @Column(name = "verification_expired_at")
     private LocalDateTime verificationExpiredAt;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private User user;
 
     @PrePersist
     public void setId() {

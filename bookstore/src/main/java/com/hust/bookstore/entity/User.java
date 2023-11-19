@@ -28,11 +28,17 @@ public class User extends BaseEntity{
     private Gender gender;
     @Enumerated(EnumType.STRING)
     private UserType type;
+    @Column(name = "account_id")
+    private Long accountId;
 
     @PrePersist
     public void setId() {
         SnowflakeIdGenerator idGenerator = new SnowflakeIdGenerator(0, 0);
         this.id = idGenerator.nextId();
     }
+
+    @OneToOne
+    @JoinColumn(name = "account_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private Account account;
 
 }

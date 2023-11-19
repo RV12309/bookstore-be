@@ -1,7 +1,7 @@
 package com.hust.bookstore.controller;
 
 import com.hust.bookstore.entity.Account;
-import com.hust.bookstore.serrvice.AuthService;
+import com.hust.bookstore.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,4 +1,4 @@
-package com.hust.bookstore.serrvice.impl;
+package com.hust.bookstore.service.impl;
 
 import com.hust.bookstore.common.Utils;
 import com.hust.bookstore.dto.request.*;
@@ -12,8 +12,8 @@ import com.hust.bookstore.enumration.UserType;
 import com.hust.bookstore.exception.BusinessException;
 import com.hust.bookstore.repository.AccountRepository;
 import com.hust.bookstore.repository.UserRepository;
-import com.hust.bookstore.serrvice.NotificationService;
-import com.hust.bookstore.serrvice.UserService;
+import com.hust.bookstore.service.NotificationService;
+import com.hust.bookstore.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;

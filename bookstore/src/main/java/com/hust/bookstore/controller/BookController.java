@@ -1,15 +1,15 @@
 package com.hust.bookstore.controller;
 
+import com.hust.bookstore.dto.PageDto;
 import com.hust.bookstore.dto.request.BookRequest;
 import com.hust.bookstore.dto.request.SearchBookRequest;
 import com.hust.bookstore.dto.request.UpdateBookRequest;
 import com.hust.bookstore.dto.response.BaseResponse;
 import com.hust.bookstore.dto.response.BookResponse;
-import com.hust.bookstore.serrvice.BooksService;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import com.hust.bookstore.enumration.ResponseCode;
+import com.hust.bookstore.service.BooksService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,33 +27,37 @@ public class BookController {
 
     @Operation(summary = "Thêm mới sách")
     @PostMapping
-    public ResponseEntity<BookResponse> createBook(@Valid @RequestBody BookRequest bookRequest) {
-        return ResponseEntity.ok(booksService.createBook(bookRequest));
+    public ResponseEntity<BaseResponse<BookResponse>> createBook(@Valid @RequestBody BookRequest bookRequest) {
+        return ResponseEntity.ok(BaseResponse.<BookResponse>builder().code(ResponseCode.SUCCESS.code())
+                .message(ResponseCode.SUCCESS.message()).data(booksService.createBook(bookRequest)).build());
     }
 
     @Operation(summary = "Cập nhật sách")
     @PutMapping
-    public ResponseEntity<BookResponse> updateBook(@Valid @RequestBody UpdateBookRequest bookRequest) {
-        return ResponseEntity.ok(booksService.updateBook(bookRequest));
+    public ResponseEntity<BaseResponse<BookResponse>> updateBook(@Valid @RequestBody UpdateBookRequest bookRequest) {
+        return ResponseEntity.ok(BaseResponse.<BookResponse>builder().code(ResponseCode.SUCCESS.code())
+                .message(ResponseCode.SUCCESS.message()).data(booksService.updateBook(bookRequest)).build());
     }
 
     @Operation(summary = "Xóa sách theo mã ISBN")
     @DeleteMapping("/{isbn}")
-    public ResponseEntity<Object> deleteBook(@PathVariable String isbn) {
+    public ResponseEntity<BaseResponse<Object>> deleteBook(@PathVariable String isbn) {
         booksService.delete(isbn);
         return ResponseEntity.ok(BaseResponse.builder().code(SUCCESS.code()).message(SUCCESS.message()).build());
     }
 
     @Operation(summary = "Lấy thông tin chi tiết sách theo mã ISBN")
     @GetMapping("/{isbn}")
-    public ResponseEntity<BookResponse> getDetail(@PathVariable String isbn) {
-        return ResponseEntity.ok(booksService.getDetail(isbn));
+    public ResponseEntity<BaseResponse<BookResponse>> getDetail(@PathVariable String isbn) {
+        return ResponseEntity.ok(BaseResponse.<BookResponse>builder().code(ResponseCode.SUCCESS.code())
+                .message(ResponseCode.SUCCESS.message()).data(booksService.getDetail(isbn)).build());
     }
 
     @Operation(summary = "Tìm kiếm sách")
-    @GetMapping
-    public ResponseEntity<Page<BookResponse>> searchBook(@RequestBody SearchBookRequest request) {
-        return ResponseEntity.ok(booksService.searchBooks(request));
+    @PostMapping("/list")
+    public ResponseEntity<BaseResponse<PageDto<BookResponse>>> searchBook(@Valid @RequestBody SearchBookRequest request) {
+        return ResponseEntity.ok(BaseResponse.<PageDto<BookResponse>>builder().code(ResponseCode.SUCCESS.code())
+                .message(ResponseCode.SUCCESS.message()).data(booksService.searchBooks(request)).build());
     }
 
 }

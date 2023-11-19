@@ -5,7 +5,7 @@ import com.hust.bookstore.dto.request.UpdateUserRequest;
 import com.hust.bookstore.dto.response.BaseResponse;
 import com.hust.bookstore.dto.response.UserResponse;
 import com.hust.bookstore.dto.response.UserStatisticResponse;
-import com.hust.bookstore.serrvice.UserService;
+import com.hust.bookstore.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;

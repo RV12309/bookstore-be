@@ -3,7 +3,7 @@ package com.hust.bookstore.controller;
 import com.hust.bookstore.dto.request.ForgotPasswordRequest;
 import com.hust.bookstore.dto.request.VerifyAccountRequest;
 import com.hust.bookstore.dto.response.BaseResponse;
-import com.hust.bookstore.serrvice.UserService;
+import com.hust.bookstore.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
