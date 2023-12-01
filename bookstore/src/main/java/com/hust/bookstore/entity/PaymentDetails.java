@@ -1,6 +1,7 @@
 package com.hust.bookstore.entity;
 
 import cn.ipokerface.snowflake.SnowflakeIdGenerator;
+import com.hust.bookstore.enumration.PaymentProvider;
 import com.hust.bookstore.enumration.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,10 +29,12 @@ public class PaymentDetails extends BaseEntity {
     @Column(name = "order_id")
     private Long orderId;
 
-    @Column(name="provider")
-    private String provider;
+    @Column(name = "provider")
+    @Enumerated(EnumType.STRING)
+    private PaymentProvider provider;
 
     @Column(name = "amount", precision = 10, scale = 2, nullable = false)
+    @Builder.Default
     private BigDecimal amount = BigDecimal.ZERO;
 
     @Column(name = "status")
@@ -48,11 +51,4 @@ public class PaymentDetails extends BaseEntity {
     @Builder.Default
     private Boolean isDeleted = false;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private User user;
-
-    @OneToOne
-    @JoinColumn(name = "order_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private OrderDetails orderDetails;
 }

@@ -9,10 +9,11 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Getter
+@ToString
 public class SearchBookRequest {
     private String title;
     private String author;
-    private Long categoryId;
+    private List<Long> categoryIds;
 
     @Builder.Default
     private Integer page = 0;

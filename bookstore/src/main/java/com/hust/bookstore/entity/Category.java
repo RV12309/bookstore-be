@@ -5,8 +5,6 @@ import cn.ipokerface.snowflake.SnowflakeIdGenerator;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -23,13 +21,8 @@ public class Category extends BaseEntity {
     private String name;
     private String description;
 
-    @ManyToMany
-    @JoinTable(
-            name = "book_categories",
-            joinColumns = @JoinColumn(name = "category_id"),
-            inverseJoinColumns = @JoinColumn(name = "book_id")
-    )
-    private List<Book> books;
+    @Column(name = "parent_id")
+    private Long parentId;
 
     @PrePersist
     public void setId() {

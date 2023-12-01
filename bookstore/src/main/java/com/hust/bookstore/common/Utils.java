@@ -1,8 +1,6 @@
 package com.hust.bookstore.common;
 
-import com.hust.bookstore.entity.Book;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;

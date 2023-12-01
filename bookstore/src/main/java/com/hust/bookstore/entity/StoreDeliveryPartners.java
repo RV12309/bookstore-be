@@ -4,6 +4,7 @@ import cn.ipokerface.snowflake.SnowflakeIdGenerator;
 import com.hust.bookstore.enumration.DeliveryProvider;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Comment;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -11,11 +12,11 @@ import lombok.*;
 @Setter
 @Entity
 @Builder
-@Table(name = "delivery_partners", indexes = {
+@Table(name = "store_delivery_partners", indexes = {
         @Index(name = "delivery_partners_user_id_index", columnList = "user_id"),
         @Index(name = "delivery_partners_account_id_index", columnList = "account_id"),
 })
-public class DeliveryPartners extends BaseEntity {
+public class StoreDeliveryPartners extends BaseEntity {
 
     @Id
     @Column(name = "id")
@@ -30,14 +31,10 @@ public class DeliveryPartners extends BaseEntity {
     @Column(name = "account_id")
     private Long accountId;
 
-    @Column(name="provider")
+    @Column(name = "provider")
+    @Comment("Nhà vận chuyển")
+    @Enumerated(EnumType.STRING)
     private DeliveryProvider provider;
-
-    @Column(name = "api_key")
-    private String apiKey;
-
-    @Column(name = "api_secret")
-    private String apiSecret;
 
     @Column(name = "api_url")
     private String apiUrl;
@@ -48,6 +45,29 @@ public class DeliveryPartners extends BaseEntity {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "token")
+    @Comment("Token của đối tác vận chuyển")
+    private String token;
+
+    @Column(name = "is_default")
+    @Builder.Default
+    private Boolean isDefault = false;
+
+    @Column(name = "shop_id")
+    @Comment("Mã shop - tạo đối tác vận chuyển cho shop")
+    private Integer shopId;
+
+    @Column(name = "district_id")
+    @Comment("Mã phường/xã - với provider là GHN")
+    private Long districtId;
+
+    @Column(name = "ward_code")
+    @Comment("Mã phường/xã - với provider là GHN")
+    private String wardCode;
+
+    @Column(name = "phone")
+    @Comment("Số điện thoại - với provider là GHN")
+    private String phone;
 
     @PrePersist
     public void setId() {
@@ -59,11 +79,4 @@ public class DeliveryPartners extends BaseEntity {
     @Builder.Default
     private Boolean isDeleted = false;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "account_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private Account account;
 }

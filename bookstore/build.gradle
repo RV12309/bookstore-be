@@ -52,6 +52,11 @@ dependencies {
     //swagger
     implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.0.3'
     implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.15'
+
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.13.0'
+
+    //feign client
+    implementation 'io.github.openfeign:feign-okhttp:13.0'
 }
 
 tasks.named('test') {

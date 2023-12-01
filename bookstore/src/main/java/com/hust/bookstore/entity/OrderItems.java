@@ -4,6 +4,8 @@ import cn.ipokerface.snowflake.SnowflakeIdGenerator;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -28,6 +30,12 @@ public class OrderItems extends BaseEntity {
     @Column(name = "quantity")
     private Long quantity;
 
+    @Column(name = "price")
+    private BigDecimal price;
+
+    @Column(name = "total")
+    private BigDecimal total;
+
     @PrePersist
     public void setId() {
         SnowflakeIdGenerator idGenerator = new SnowflakeIdGenerator(0, 0);
@@ -38,8 +46,5 @@ public class OrderItems extends BaseEntity {
     @Builder.Default
     private Boolean isDeleted = false;
 
-    @OneToOne
-    @JoinColumn(name = "book_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private Book book;
 
 }

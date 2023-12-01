@@ -1,11 +1,11 @@
 package com.hust.bookstore.entity;
 
 import cn.ipokerface.snowflake.SnowflakeIdGenerator;
+import com.hust.bookstore.enumration.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,11 +25,12 @@ public class OrderDetails extends BaseEntity {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(name = "payment_id")
-    private Long paymentId;
-
     @Column(name = "total", precision = 10, scale = 2, nullable = false)
+    @Builder.Default
     private BigDecimal total = BigDecimal.ZERO;
+
+    @Column(name = "status")
+    private OrderStatus status;
 
     @PrePersist
     public void setId() {
@@ -45,11 +46,4 @@ public class OrderDetails extends BaseEntity {
     @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
     private User user;
 
-    @OneToOne
-    @JoinColumn(name = "payment_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private PaymentDetails paymentDetails;
-
-    @OneToMany
-    @JoinColumn(name = "order_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private List<OrderItems> orderItems;
 }

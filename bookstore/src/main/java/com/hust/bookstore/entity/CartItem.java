@@ -4,7 +4,7 @@ import cn.ipokerface.snowflake.SnowflakeIdGenerator;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
+import java.math.BigDecimal;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,6 +30,26 @@ public class CartItem extends BaseEntity {
     @Column(name = "quantity")
     private Long quantity;
 
+    @Column(name = "title")
+    private String title;
+
+    @Column(name = "price")
+    private BigDecimal price;
+
+    @Column(name = "total")
+    private BigDecimal total;
+
+    @Column(name = "url_thumbnail")
+    private String urlThumbnail;
+
+    @Column(name = "seller_id")
+    private Long sellerId;
+
+    @Column(name = "seller_name")
+    private String sellerName;
+
+
+
     @PrePersist
     public void setId() {
         SnowflakeIdGenerator idGenerator = new SnowflakeIdGenerator(0, 0);
@@ -43,9 +63,5 @@ public class CartItem extends BaseEntity {
     @OneToOne
     @JoinColumn(name = "book_id", referencedColumnName = "id", insertable = false, updatable = false)
     private Book book;
-
-    @ManyToOne
-    @JoinColumn(name = "session_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private ShoppingSession shoppingSession;
 
 }

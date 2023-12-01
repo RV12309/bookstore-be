@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class CategoryResponse {
-    private Long id;
+    private String id;
     private String code;
     private String name;
     private String description;

@@ -21,6 +21,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
           "AND b.author LIKE :#{#input.getAuthor()} " +
           "AND (:#{#input.getPriceFrom()} IS NULL OR b.price >= :#{#input.getPriceFrom()}) " +
           "AND (:#{#input.getPriceTo()} IS NULL OR b.price <= :#{#input.getPriceTo()}) " +
-          "AND b.id in (SELECT bc.bookId FROM BookCategories bc WHERE bc.categoryId = :#{#input.getCategoryId()})")
+          "AND (coalesce(:#{#input.getCategoryIds()}) is null or " +
+          "b.id in (SELECT bc.bookId FROM BookCategories bc WHERE bc.categoryId in :#{#input.getCategoryIds()}))")
   Page<Book> searchBooks(SearchBookRequest input, Pageable pageable);
 }

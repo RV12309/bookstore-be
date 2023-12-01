@@ -10,6 +10,7 @@ public class Constants {
     public static final String SELLER_ROLE = "SELLER";
     public static final String ROLE = "role";
     public static final String TOKEN = "token";
+    public static final String REFRESH_TOKEN ="refreshToken";
     public static final String USERNAME = "username";
     public static final String ACCOUNT = "account";
 
@@ -19,4 +20,6 @@ public class Constants {
 
     public static final String VERIFICATION_CODE = "verificationCode";
 
+    public static final String SLASH = "/";
+    public static final String QUESTION_MARK = "?";
 }

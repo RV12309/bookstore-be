@@ -5,9 +5,9 @@ public enum DeliveryProvider {
     VN_POST,
     GRAB,
     GO_SEND,
-    GHN,
     GHTK,
     JT,
     VNEX,
+    GHN_EXPRESS,
     OTHER
 }

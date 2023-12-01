@@ -3,6 +3,7 @@ package com.hust.bookstore.service.impl;
 import com.hust.bookstore.common.Constants;
 import com.hust.bookstore.dto.CustomUserDetail;
 import com.hust.bookstore.dto.request.AuthRequest;
+import com.hust.bookstore.dto.request.RefreshAccessTokenRequest;
 import com.hust.bookstore.entity.Account;
 import com.hust.bookstore.enumration.ResponseCode;
 import com.hust.bookstore.exception.BusinessException;
@@ -63,15 +64,13 @@ public class AuthServiceImpl implements AuthService {
 
     public Map<String, String> getToken(UserDetails userDetails) {
         log.info("Generating token for user {}.", userDetails.getUsername());
-        final Collection<? extends GrantedAuthority> roles = userDetails.getAuthorities();
-        Map<String, Object> claims = new HashMap<>();
-        claims.put(Constants.ROLE, roles);
-        claims.put(USERNAME, userDetails.getUsername());
-        CustomUserDetail user = (CustomUserDetail) userDetails;
-        claims.put(ACCOUNT, user.getAccount());
+        Map<String, Object> claims = getClaims(userDetails);
         final String token = jwtProvider.generateToken(claims, userDetails);
         log.info("Token generated.");
-        return Map.of(TOKEN, token);
+        Map<String, String> tokenMap = new HashMap<>();
+        tokenMap.put(TOKEN, token);
+        tokenMap.put(REFRESH_TOKEN, getRefreshToken(userDetails));
+        return tokenMap;
     }
 
     @Override
@@ -86,5 +85,43 @@ public class AuthServiceImpl implements AuthService {
             return customUserDetail.getAccount();
         }
         return null;
+    }
+
+    @Override
+    public Map<String, String> refreshToken(RefreshAccessTokenRequest request) {
+        log.info("Start refresh token for user");
+        String refreshToken = request.getRefreshToken();
+        if (refreshToken == null) {
+            throw new BusinessException(ResponseCode.INVALID_REFRESH_TOKEN);
+        }
+        String username = jwtProvider.getUserNameFromJWT(refreshToken);
+        if (username == null) {
+            throw new BusinessException(ResponseCode.INVALID_REFRESH_TOKEN);
+        }
+        Account account = accountRepository.findByUsername(username).orElseThrow(() -> new BusinessException(ResponseCode.INVALID_REFRESH_TOKEN));
+        CustomUserDetail customUserDetail = new CustomUserDetail(account);
+        if (!jwtProvider.validateToken(refreshToken)) {
+            throw new BusinessException(ResponseCode.INVALID_REFRESH_TOKEN);
+        }
+        return getToken(customUserDetail);
+
+    }
+
+    private String getRefreshToken(UserDetails userDetails) {
+        log.info("Generating refresh token for user {}.", userDetails.getUsername());
+        Map<String, Object> claims = getClaims(userDetails);
+        final String token = jwtProvider.generateRefreshToken(claims, userDetails);
+        log.info("Refresh token generated.");
+        return token;
+    }
+
+    private Map<String, Object> getClaims(UserDetails userDetails) {
+        final Collection<? extends GrantedAuthority> roles = userDetails.getAuthorities();
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(Constants.ROLE, roles);
+        claims.put(USERNAME, userDetails.getUsername());
+        CustomUserDetail user = (CustomUserDetail) userDetails;
+        claims.put(ACCOUNT, user.getAccount());
+        return claims;
     }
 }

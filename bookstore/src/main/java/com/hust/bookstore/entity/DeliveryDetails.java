@@ -3,7 +3,6 @@ package com.hust.bookstore.entity;
 import cn.ipokerface.snowflake.SnowflakeIdGenerator;
 import com.hust.bookstore.enumration.DeliveryProvider;
 import com.hust.bookstore.enumration.DeliveryStatus;
-import com.hust.bookstore.enumration.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -50,11 +49,4 @@ public class DeliveryDetails extends BaseEntity {
     @Builder.Default
     private Boolean isDeleted = false;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private User user;
-
-    @OneToOne
-    @JoinColumn(name = "order_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private OrderDetails orderDetails;
 }

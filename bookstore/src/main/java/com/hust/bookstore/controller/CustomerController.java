@@ -2,7 +2,10 @@ package com.hust.bookstore.controller;
 
 import com.hust.bookstore.dto.request.AccountRequest;
 import com.hust.bookstore.dto.request.UpdateUserRequest;
+import com.hust.bookstore.dto.request.UserAddressRequest;
 import com.hust.bookstore.dto.response.BaseResponse;
+import com.hust.bookstore.dto.response.UserAddressResponse;
+import com.hust.bookstore.dto.response.UserResponse;
 import com.hust.bookstore.enumration.UserType;
 import com.hust.bookstore.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,4 +37,38 @@ public class CustomerController {
         return ResponseEntity.ok(BaseResponse.builder().code(SUCCESS.code()).message(SUCCESS.message()).build());
     }
 
+    @Operation(summary = "Cập nhật thông tin địa chỉ khách hàng")
+    @PutMapping("/address/{id}")
+    ResponseEntity<BaseResponse<UserAddressResponse>> updateUserAddress(@PathVariable Long id, @Valid @RequestBody UserAddressRequest request) {
+        return ResponseEntity.ok(BaseResponse.<UserAddressResponse>builder()
+                .code(SUCCESS.code())
+                .message(SUCCESS.message())
+                .data(userService.updateUserAddress(id, request)).build());
+    }
+
+    @Operation(summary = "Xóa địa chỉ khách hàng")
+    @DeleteMapping("/address/{id}")
+    ResponseEntity<BaseResponse<Object>> deleteUserAddress(@PathVariable Long id) {
+        userService.deleteUserAddress(id);
+        return ResponseEntity.ok(BaseResponse.builder().code(SUCCESS.code()).message(SUCCESS.message()).build());
+    }
+
+    @Operation(summary = "Thêm địa chỉ khách hàng")
+    @PostMapping("/address")
+    ResponseEntity<BaseResponse<UserAddressResponse>> addUserAddress(@Valid @RequestBody UserAddressRequest request) {
+
+        return ResponseEntity.ok(BaseResponse.<UserAddressResponse>builder()
+                .code(SUCCESS.code())
+                .message(SUCCESS.message())
+                .data(userService.addUserAddress(request)).build());
+    }
+
+    @Operation(summary = "Lấy thông tin chi tiết khách hàng")
+    @GetMapping
+    ResponseEntity<BaseResponse<UserResponse>> getUserDetail() {
+        return ResponseEntity.ok(BaseResponse.<UserResponse>builder()
+                .code(SUCCESS.code())
+                .message(SUCCESS.message())
+                .data(userService.getUserDetail()).build());
+    }
 }

@@ -7,11 +7,13 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -30,28 +32,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
-       log.info("Filtering request {}.", request.getRequestURI());
-        Optional<String> authHeader = Optional.ofNullable(request.getHeader("Authorization"));
-        if (authHeader.isEmpty() || !authHeader.get().startsWith("Bearer ")) {
-            log.info("Request {} is not need authenticated.", request.getRequestURI());
-            filterChain.doFilter(request, response);
-            return;
-        }
+                                    @NotNull FilterChain filterChain) throws ServletException, IOException {
+        log.info("Filtering request {}.", request.getRequestURI());
 
-        log.info("Authenticating request : {}.", request.getRequestURI());
-        final String jwt = authHeader.get().substring(7);
-        final String username = jwtTokenProvider.getUserNameFromJWT(jwt);
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            CustomUserDetail userDetails = (CustomUserDetail)userDetailsService.loadUserByUsername(username);
-            log.info("User {} is authenticated.", userDetails.getUsername());
-            if (jwtTokenProvider.validateToken(jwt)) {
-                log.info("Token is valid.");
-                final var authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+        try {
+
+            final String jwt = getJwt(request);
+            if (jwt == null) {
+                log.info("No token found.");
+                filterChain.doFilter(request, response);
+                return;
             }
+
+            final String username = jwtTokenProvider.getUserNameFromJWT(jwt);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                log.info("Authenticating request : {}.", request.getRequestURI());
+                CustomUserDetail userDetails = (CustomUserDetail) userDetailsService.loadUserByUsername(username);
+                log.info("User {} is authenticated.", userDetails.getUsername());
+                if (jwtTokenProvider.validateToken(jwt)) {
+                    log.info("Token is valid.");
+                    final var authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Cannot set user authentication: {}", e.getMessage());
         }
         filterChain.doFilter(request, response);
+    }
+
+    private String getJwt(HttpServletRequest request) {
+        Optional<String> authHeader = Optional.ofNullable(request.getHeader("Authorization"));
+
+        if (authHeader.isEmpty()) {
+            return null;
+        }
+
+        String headerAuth = authHeader.get();
+
+        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
+            return headerAuth.substring(7);
+        }
+
+        return null;
     }
 }

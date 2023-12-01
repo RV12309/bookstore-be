@@ -1,6 +1,7 @@
 package com.hust.bookstore.controller;
 
 import com.hust.bookstore.dto.request.AuthRequest;
+import com.hust.bookstore.dto.request.RefreshAccessTokenRequest;
 import com.hust.bookstore.dto.response.BaseResponse;
 import com.hust.bookstore.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +33,13 @@ public class AuthController {
         log.info("Authenticating user {}.", request.getUsername());
         Map<String, String> userRegistrationResponse = authService.authRequest(request);
         log.info("User authenticated.");
+        return ResponseEntity.ok(new BaseResponse<>(SUCCESS.code(), SUCCESS.message(), userRegistrationResponse));
+    }
+
+    @Operation(summary = "Refresh token")
+    @PostMapping("/refresh")
+    ResponseEntity<BaseResponse<Map<String, String>>> refreshToken(@Valid @RequestBody RefreshAccessTokenRequest request) {
+        Map<String, String> userRegistrationResponse = authService.refreshToken(request);
         return ResponseEntity.ok(new BaseResponse<>(SUCCESS.code(), SUCCESS.message(), userRegistrationResponse));
     }
 }

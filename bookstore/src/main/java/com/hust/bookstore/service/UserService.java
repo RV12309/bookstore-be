@@ -2,6 +2,7 @@ package com.hust.bookstore.service;
 
 import com.hust.bookstore.dto.request.*;
 import com.hust.bookstore.dto.response.BaseResponse;
+import com.hust.bookstore.dto.response.UserAddressResponse;
 import com.hust.bookstore.dto.response.UserResponse;
 import com.hust.bookstore.dto.response.UserStatisticResponse;
 import com.hust.bookstore.enumration.UserType;
@@ -29,4 +30,12 @@ public interface UserService {
     void lockUser(Long id);
 
     void unlockUser(Long id);
+
+    UserAddressResponse updateUserAddress(Long id, UserAddressRequest request);
+
+    void deleteUserAddress(Long id);
+
+    UserAddressResponse addUserAddress(UserAddressRequest request);
+
+    UserResponse getUserDetail();
 }

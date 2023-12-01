@@ -3,6 +3,9 @@ package com.hust.bookstore.dto.response;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 @Getter
 @Setter
 @ApiResponse
@@ -10,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class BookResponse {
-    private Long id;
+    private String id;
 
     private String isbn;
 
@@ -32,7 +35,13 @@ public class BookResponse {
 
     private Long numberOfPages;
 
-    private Long price;
+    private BigDecimal price;
 
     private Long quantity;
+
+    private List<CategoryResponse> categories;
+
+    private String sellerId;
+
+    private String sellerName;
 }

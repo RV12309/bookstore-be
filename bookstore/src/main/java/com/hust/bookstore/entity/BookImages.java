@@ -18,10 +18,6 @@ public class BookImages extends BaseEntity {
     private Long bookId;
     private String url;
 
-    @ManyToOne
-    @JoinColumn(name = "bookId", insertable = false, updatable = false)
-    private Book book;
-
     @PrePersist
     public void setId() {
         SnowflakeIdGenerator idGenerator = new SnowflakeIdGenerator(0, 0);

@@ -3,15 +3,18 @@ package com.hust.bookstore.service.impl;
 import com.hust.bookstore.common.Utils;
 import com.hust.bookstore.dto.request.*;
 import com.hust.bookstore.dto.response.BaseResponse;
+import com.hust.bookstore.dto.response.UserAddressResponse;
 import com.hust.bookstore.dto.response.UserResponse;
 import com.hust.bookstore.dto.response.UserStatisticResponse;
 import com.hust.bookstore.entity.Account;
 import com.hust.bookstore.entity.User;
+import com.hust.bookstore.entity.UserAddress;
 import com.hust.bookstore.enumration.MailTemplate;
 import com.hust.bookstore.enumration.UserType;
 import com.hust.bookstore.exception.BusinessException;
-import com.hust.bookstore.repository.AccountRepository;
-import com.hust.bookstore.repository.UserRepository;
+import com.hust.bookstore.helper.BusinessHelper;
+import com.hust.bookstore.repository.*;
+import com.hust.bookstore.service.AuthService;
 import com.hust.bookstore.service.NotificationService;
 import com.hust.bookstore.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.thymeleaf.context.Context;
 
@@ -35,15 +39,11 @@ import java.util.Map;
 
 import static com.hust.bookstore.common.Constants.*;
 import static com.hust.bookstore.enumration.ResponseCode.*;
+import static java.util.Objects.nonNull;
 
 @Service
 @Slf4j
-public class UserServiceImpl implements UserService {
-
-    private final ModelMapper modelMapper;
-    private final UserRepository userRepository;
-    private final AccountRepository accountRepository;
-    private final NotificationService notificationService;
+public class UserServiceImpl extends BusinessHelper implements UserService {
 
     @Value("${base-url}")
     private String baseUrl;
@@ -57,12 +57,18 @@ public class UserServiceImpl implements UserService {
     @Value("${account.verify.expired-time}")
     private Long verificationExpiredTime;
 
-    public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository,
-                           AccountRepository accountRepository, NotificationService notificationService) {
-        this.modelMapper = modelMapper;
-        this.userRepository = userRepository;
-        this.accountRepository = accountRepository;
-        this.notificationService = notificationService;
+    public UserServiceImpl(BookRepository bookRepository, CartRepository cartRepository, CartItemRepository cartItemRepository,
+                           PaymentRepository paymentRepository, DeliveryPartnerConfigRepository deliveryPartnerConfigRepo,
+                           StoreDeliveryPartnerRepository storeDeliveryPartnerRepo, UserRepository userRepository,
+                           OrderDetailRepository orderDetailsRepository, OrderItemsRepository orderItemsRepository,
+                           CategoryRepository categoryRepository, BookCategoryRepository bookCategoryRepository,
+                           AccountRepository accountRepository, AuthService authService, BookImageRepository bookImageRepository,
+                           ModelMapper modelMapper, NotificationService notificationService,
+                           UserAddressRepository addressRepository) {
+        super(bookRepository, cartRepository, cartItemRepository, paymentRepository,
+                deliveryPartnerConfigRepo, storeDeliveryPartnerRepo, userRepository,
+                orderDetailsRepository, orderItemsRepository, categoryRepository,
+                bookCategoryRepository, accountRepository, authService, bookImageRepository, modelMapper, notificationService, addressRepository);
     }
 
     @Override
@@ -107,14 +113,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void updateUser(UpdateUserRequest request) {
         Long id = request.getId();
         log.info("Update user with id: {}", id);
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
+        Account account = authService.getCurrentAccountLogin();
+        if(non(account.getId().equals(id))){
+            throw new BusinessException(USER_NOT_MATCH);
+        }
+        User user;
+        if (nonNull(account.getUserId())) {
+            user = userRepository.findById(id).orElse(new User());
+        } else {
+            user = new User();
+        }
+
         log.info("Found user with id: {}", id);
         modelMapper.map(request, user);
+        Account currentAccount = accountRepository.findById(account.getId())
+                .orElseThrow(() -> new BusinessException(ACCOUNT_NOT_FOUND));
+        user.setAccountId(currentAccount.getId());
         userRepository.save(user);
+        currentAccount.setUserId(user.getId());
+        accountRepository.save(currentAccount);
         log.info("Update user successfully");
     }
 
@@ -247,5 +268,69 @@ public class UserServiceImpl implements UserService {
         account.setIsEnabled(true);
         accountRepository.save(account);
         log.info("Unlock user successfully");
+    }
+
+    @Override
+    public UserAddressResponse updateUserAddress(Long id, UserAddressRequest request) {
+        log.info("Start update user address with id: {}", id);
+        Account account = authService.getCurrentAccountLogin();
+        User user = checkExistUser(account.getId());
+        UserAddress userAddress = checkExistUserAddress(id);
+
+        if (!user.getId().equals(userAddress.getUserId())) {
+            throw new BusinessException(USER_ADDRESS_NOT_MATCH);
+        }
+
+        modelMapper.map(request, userAddress);
+        if (Boolean.TRUE.equals(request.isDefault())) {
+            addressRepository.updateDefaultAddress(user.getId());
+        }
+        UserAddress address = addressRepository.save(userAddress);
+        log.info("Update user address successfully");
+        return modelMapper.map(address, UserAddressResponse.class);
+    }
+
+    @Override
+    public void deleteUserAddress(Long id) {
+        log.info("Start delete user address with id: {}", id);
+        Account account = authService.getCurrentAccountLogin();
+        User user = checkExistUser(account.getId());
+        UserAddress userAddress = checkExistUserAddress(id);
+        if (!user.getId().equals(userAddress.getUserId())) {
+            throw new BusinessException(USER_ADDRESS_NOT_MATCH);
+        }
+
+        if (Boolean.TRUE.equals(userAddress.isDefault())) {
+            throw new BusinessException(USER_ADDRESS_DEFAULT);
+        }
+        addressRepository.delete(userAddress);
+        log.info("Delete user address successfully");
+    }
+
+    @Override
+    public UserAddressResponse addUserAddress(UserAddressRequest request) {
+        log.info("Start add user address");
+        Account account = authService.getCurrentAccountLogin();
+        User user = checkExistUser(account.getId());
+        UserAddress userAddress = modelMapper.map(request, UserAddress.class);
+        userAddress.setUserId(user.getId());
+        if (Boolean.TRUE.equals(request.isDefault())) {
+            addressRepository.updateDefaultAddress(user.getId());
+        }
+        UserAddress address = addressRepository.save(userAddress);
+        log.info("Add user address successfully");
+        return modelMapper.map(address, UserAddressResponse.class);
+    }
+
+    @Override
+    public UserResponse getUserDetail() {
+        log.info("Get user detail");
+        Account account = authService.getCurrentAccountLogin();
+        User user = checkExistUser(account.getId());
+        log.info("Get user detail successfully");
+        UserResponse userResponse = modelMapper.map(user, UserResponse.class);
+        userResponse.setTypeName(account.getType().getName());
+        return modelMapper.map(user, UserResponse.class);
+
     }
 }

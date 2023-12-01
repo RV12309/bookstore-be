@@ -8,8 +8,11 @@ import com.hust.bookstore.dto.response.CategoryResponse;
 import com.hust.bookstore.entity.Category;
 import com.hust.bookstore.enumration.ResponseCode;
 import com.hust.bookstore.exception.BusinessException;
-import com.hust.bookstore.repository.CategoryRepository;
+import com.hust.bookstore.helper.BusinessHelper;
+import com.hust.bookstore.repository.*;
+import com.hust.bookstore.service.AuthService;
 import com.hust.bookstore.service.CategoryService;
+import com.hust.bookstore.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
@@ -24,14 +27,23 @@ import static com.hust.bookstore.common.Utils.removeNonUnicodeCharacter;
 
 @Service
 @Slf4j
-public class CategoryServiceImpl implements CategoryService {
+public class CategoryServiceImpl extends BusinessHelper implements CategoryService {
 
-    private final CategoryRepository categoryRepository;
-    private final ModelMapper modelMapper;
 
-    public CategoryServiceImpl(CategoryRepository categoryRepository, ModelMapper modelMapper) {
-        this.categoryRepository = categoryRepository;
-        this.modelMapper = modelMapper;
+    public CategoryServiceImpl(BookRepository bookRepository, CartRepository cartRepository,
+                               CartItemRepository cartItemRepository, PaymentRepository paymentRepository,
+                               DeliveryPartnerConfigRepository deliveryPartnerConfigRepo,
+                               StoreDeliveryPartnerRepository storeDeliveryPartnerRepo, UserRepository userRepository,
+                               OrderDetailRepository orderDetailsRepository, OrderItemsRepository orderItemsRepository,
+                               CategoryRepository categoryRepository, BookCategoryRepository bookCategoryRepository,
+                               AccountRepository accountRepository, AuthService authService,
+                               BookImageRepository bookImageRepository, ModelMapper modelMapper,
+                               NotificationService notificationService, UserAddressRepository addressRepository) {
+        super(bookRepository, cartRepository, cartItemRepository, paymentRepository,
+                deliveryPartnerConfigRepo, storeDeliveryPartnerRepo, userRepository,
+                orderDetailsRepository, orderItemsRepository, categoryRepository,
+                bookCategoryRepository, accountRepository, authService, bookImageRepository,
+                modelMapper, notificationService, addressRepository);
     }
 
     @Override
@@ -73,7 +85,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void delete(Long id) {
         Category category = getExistedCategory(id);
-        boolean isInUse = category.getBooks().stream().anyMatch(book -> Boolean.FALSE.equals(book.getIsDeleted()));
+
+        boolean isInUse = bookCategoryRepository.existsByCategoryId(id);
         if (isInUse) {
             log.error("Category {} is in use", category.getName());
             throw new BusinessException(ResponseCode.CATEGORY_IS_IN_USE);

@@ -15,5 +15,6 @@ public class UserResponse extends UserDto {
     private String avatarUrl;
     private String username;
     private String createdAt;
+    private String typeName;
 
 }

@@ -58,10 +58,6 @@ public class Account extends BaseEntity {
     @Column(name = "verification_expired_at")
     private LocalDateTime verificationExpiredAt;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private User user;
-
     @PrePersist
     public void setId() {
         SnowflakeIdGenerator idGenerator = new SnowflakeIdGenerator(0, 0);

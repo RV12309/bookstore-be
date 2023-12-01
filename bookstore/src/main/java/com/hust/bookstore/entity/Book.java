@@ -4,7 +4,8 @@ import cn.ipokerface.snowflake.SnowflakeIdGenerator;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -37,28 +38,16 @@ public class Book extends BaseEntity {
 
     private String publisher;
 
-    private String publishDate;
+    private LocalDateTime publishDate;
 
     private Long numberOfPages;
 
-    private Long price;
+    private BigDecimal price;
 
     private Long quantity;
 
     @Column(name = "account_id")
     private Long accountId;
-
-
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<BookImages> bookImages;
-
-    @ManyToMany
-    @JoinTable(
-            name = "book_categories",
-            joinColumns = @JoinColumn(name = "book_id"),
-            inverseJoinColumns = @JoinColumn(name = "category_id")
-    )
-    private List<Category> categories;
 
     @PrePersist
     public void setId() {

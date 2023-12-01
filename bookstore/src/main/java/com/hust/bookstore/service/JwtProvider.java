@@ -10,4 +10,6 @@ public interface JwtProvider {
     boolean validateToken(String authToken);
 
     String getUserNameFromJWT(String token);
+
+    String generateRefreshToken(Map<String, Object> extraClaims, UserDetails userDetails);
 }

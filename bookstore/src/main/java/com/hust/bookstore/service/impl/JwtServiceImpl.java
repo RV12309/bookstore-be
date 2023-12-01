@@ -20,6 +20,9 @@ public class JwtServiceImpl implements JwtProvider {
     @Value("${jwt.expiration}")
     private long jwtExpirationInMs;
 
+    @Value("${jwt.refresh.expiration}")
+    private long jwtRefreshExpirationInMs;
+
     @Override
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         Date now = new Date();
@@ -45,6 +48,19 @@ public class JwtServiceImpl implements JwtProvider {
             log.error("Error when get user id from jwt", e);
         }
         return null;
+    }
+
+    @Override
+    public String generateRefreshToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtRefreshExpirationInMs * 2);
+        return Jwts.builder()
+                .addClaims(extraClaims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .compact();
     }
 
     @Override

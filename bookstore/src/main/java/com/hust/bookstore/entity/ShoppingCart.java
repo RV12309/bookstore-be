@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,7 +15,7 @@ import java.util.List;
 @Table(name = "shopping_session", indexes = {
         @Index(name = "shopping_session_user_id_index", columnList = "id, user_id", unique = true)
 })
-public class ShoppingSession extends BaseEntity {
+public class ShoppingCart extends BaseEntity {
 
     @Id
     @Column(name = "id")
@@ -37,13 +36,5 @@ public class ShoppingSession extends BaseEntity {
 
     @Builder.Default
     private Boolean isDeleted = false;
-
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private User user;
-
-    @OneToMany
-    @JoinColumn(name = "session_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private List<CartItem> cartItems;
 
 }

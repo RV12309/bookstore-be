@@ -31,6 +31,11 @@ public class User extends BaseEntity{
     @Column(name = "account_id")
     private Long accountId;
 
+    private String province;
+    private String district;
+    private String ward;
+    private String firstAddress;
+
     @PrePersist
     public void setId() {
         SnowflakeIdGenerator idGenerator = new SnowflakeIdGenerator(0, 0);

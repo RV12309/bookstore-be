@@ -5,12 +5,15 @@ import com.hust.bookstore.dto.request.BookRequest;
 import com.hust.bookstore.dto.request.SearchBookRequest;
 import com.hust.bookstore.dto.request.UpdateBookRequest;
 import com.hust.bookstore.dto.response.BookResponse;
+import com.hust.bookstore.dto.response.CategoryResponse;
 import com.hust.bookstore.entity.*;
 import com.hust.bookstore.enumration.ResponseCode;
 import com.hust.bookstore.exception.BusinessException;
+import com.hust.bookstore.helper.BusinessHelper;
 import com.hust.bookstore.repository.*;
 import com.hust.bookstore.service.AuthService;
 import com.hust.bookstore.service.BooksService;
+import com.hust.bookstore.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
@@ -24,37 +27,29 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.hust.bookstore.common.Utils.generateIsbn;
 
 @Service
 @Slf4j
-public class BooksServiceImpl implements BooksService {
-    private final BookRepository bookRepository;
-
-    private final ModelMapper modelMapper;
-    private final AccountRepository accountRepository;
-
-    private final CategoryRepository categoryRepository;
-
-    private final AuthService authService;
-
-    private final BookImageRepository bookImageRepository;
-
-    private final BookCategoryRepository bookCategoryRepository;
+public class BooksServiceImpl extends BusinessHelper implements BooksService {
 
 
-    public BooksServiceImpl(BookRepository bookRepository, ModelMapper modelMapper,
-                            AccountRepository accountRepository, CategoryRepository categoryRepository,
-                            AuthService authService, BookImageRepository bookImageRepository,
-                            BookCategoryRepository bookCategoryRepository) {
-        this.bookRepository = bookRepository;
-        this.modelMapper = modelMapper;
-        this.accountRepository = accountRepository;
-        this.categoryRepository = categoryRepository;
-        this.authService = authService;
-        this.bookImageRepository = bookImageRepository;
-        this.bookCategoryRepository = bookCategoryRepository;
+    public BooksServiceImpl(BookRepository bookRepository, CartRepository cartRepository, CartItemRepository cartItemRepository,
+                            PaymentRepository paymentRepository, DeliveryPartnerConfigRepository deliveryPartnerConfigRepo,
+                            StoreDeliveryPartnerRepository storeDeliveryPartnerRepo, UserRepository userRepository,
+                            OrderDetailRepository orderDetailsRepository, OrderItemsRepository orderItemsRepository,
+                            CategoryRepository categoryRepository, BookCategoryRepository bookCategoryRepository,
+                            AccountRepository accountRepository, AuthService authService, BookImageRepository bookImageRepository,
+                            ModelMapper modelMapper, NotificationService notificationService,
+                            UserAddressRepository addressRepository) {
+        super(bookRepository, cartRepository, cartItemRepository, paymentRepository,
+                deliveryPartnerConfigRepo, storeDeliveryPartnerRepo, userRepository,
+                orderDetailsRepository, orderItemsRepository, categoryRepository,
+                bookCategoryRepository, accountRepository, authService, bookImageRepository, modelMapper,
+                notificationService, addressRepository);
     }
 
     @Override
@@ -77,7 +72,8 @@ public class BooksServiceImpl implements BooksService {
             log.info("Saving images for book {}.", book.getIsbn());
             List<BookImages> bookImages = new ArrayList<>();
             for (String url : imageUrls) {
-                BookImages bookImage = BookImages.builder().url(url).book(book).build();
+                BookImages bookImage = BookImages.builder().url(url)
+                        .bookId(book.getId()).build();
                 bookImages.add(bookImage);
             }
             bookImageRepository.saveAll(bookImages);
@@ -110,17 +106,21 @@ public class BooksServiceImpl implements BooksService {
 
     @Override
     public BookResponse updateBook(UpdateBookRequest request) {
+        log.info("Updating book {}.", request.getId());
         Book book = bookRepository.getReferenceById(request.getId());
         modelMapper.map(request, book);
         bookRepository.save(book);
+        log.info("Updated book {}.", request.getId());
         return modelMapper.map(book, BookResponse.class);
     }
 
     @Override
     public void delete(String isbn) {
+        log.info("Deleting book {}.", isbn);
         Book book = getBook(isbn);
         book.setIsDeleted(true);
         bookRepository.save(book);
+        log.info("Deleted book {}.", isbn);
     }
 
     private Book getBook(String isbn) {
@@ -129,16 +129,31 @@ public class BooksServiceImpl implements BooksService {
 
     @Override
     public BookResponse getDetail(String isbn) {
+        log.info("Getting detail of book {}.", isbn);
         Book book = getBook(isbn);
         if (Boolean.TRUE.equals(book.getIsDeleted()))
             throw new BusinessException(ResponseCode.BOOK_IS_DELETED);
-        return modelMapper.map(book, BookResponse.class);
+        log.info("Got detail of book {}.", isbn);
+        List<Category> categories = categoryRepository.findCategories(book.getId());
+        List<CategoryResponse> categoryResponses =
+                categories.stream().map(category -> modelMapper.map(category, CategoryResponse.class)).toList();
+        log.info("Got {} categories of book {}.", categoryResponses.size(), isbn);
+        BookResponse bookResponse = modelMapper.map(book, BookResponse.class);
+        bookResponse.setCategories(categoryResponses);
+        SellerProjection seller = userRepository.findSeller(book.getAccountId()).orElse(null);
+        if (seller != null) {
+            bookResponse.setSellerId(String.valueOf(seller.getId()));
+            bookResponse.setSellerName(seller.getName());
+        }
+        return bookResponse;
     }
 
     @Override
     public Page<BookResponse> getAllBooks() {
+        log.info("Getting all books.");
         Pageable pageable = Pageable.unpaged();
         Page<Book> books = bookRepository.findAll(pageable);
+        log.info("Got {} books.", books.getTotalElements());
         return books.map(book -> modelMapper.map(book, BookResponse.class));
     }
 
@@ -153,14 +168,26 @@ public class BooksServiceImpl implements BooksService {
         if (CollectionUtils.isEmpty(sort)) {
             sort = List.of("title");
         }
+        log.info("Searching books with request {}.", request);
 
         Sort sortBy = Sort.by(sort.stream().map(Sort.Order::by).toList());
 
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize()).withSort(sortBy);
         Page<Book> books = bookRepository.searchBooks(request, pageable);
         List<Book> content = books.getContent();
-        List<BookResponse> bookResponses = content.stream().map(book -> modelMapper.map(book, BookResponse.class)).toList();
+        List<Long> accountIds = content.stream().map(Book::getAccountId).distinct().toList();
+        List<SellerProjection> accounts = userRepository.findAllByAccountIdIn(accountIds);
+        Map<Long, String> accountMap = accounts.stream().collect(Collectors.toMap(SellerProjection::getId, SellerProjection::getName));
 
+        List<BookResponse> bookResponses = content.stream().map(book -> {
+            BookResponse bookResponse = modelMapper.map(book, BookResponse.class);
+            bookResponse.setSellerId(String.valueOf(book.getAccountId()));
+            if (accountMap.containsKey(book.getAccountId()))
+                bookResponse.setSellerName(accountMap.get(book.getAccountId()));
+            return bookResponse;
+        }).toList();
+
+        log.info("Found {} books.", bookResponses.size());
         return PageDto.<BookResponse>builder().content(bookResponses)
                 .totalElements(books.getTotalElements())
                 .totalPages(books.getTotalPages())
