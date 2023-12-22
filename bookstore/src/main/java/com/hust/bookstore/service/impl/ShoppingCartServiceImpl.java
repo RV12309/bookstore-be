@@ -50,8 +50,8 @@ public class ShoppingCartServiceImpl extends BusinessHelper implements ShoppingC
     @Override
     public CartResponse getCart(Long sessionId, Long refId) {
         log.info("Start get cart");
-        if (refId == null) {
-            if (isNull(sessionId)) {
+        if (refId == null || refId == 0) {
+            if (isNull(sessionId)|| sessionId == 0) {
                 ShoppingCart shoppingSession = ShoppingCart.builder().total(BigDecimal.valueOf(0)).build();
                 return modelMapper.map(cartRepository.save(shoppingSession), CartResponse.class);
             } else {
@@ -154,7 +154,8 @@ public class ShoppingCartServiceImpl extends BusinessHelper implements ShoppingC
         //calculate total
         BigDecimal total = BigDecimal.valueOf(0);
         for (CartItem item : cartItems) {
-            total = total.add(item.getBook().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+            Book book = checkExistBook(item.getBookId());
+            total = total.add(book.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
         }
         cart.setTotal(total);
 

@@ -5,6 +5,7 @@ import com.hust.bookstore.enumration.ResponseCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,6 +30,18 @@ public class BusinessExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<BaseResponse<Object>> handleSystemConfigNotFound(Exception ex, WebRequest request) {
+        log.info(ex.getMessage());
+
+        return new ResponseEntity<>(
+                BaseResponse.builder()
+                        .code(BAD_REQUEST.code())
+                        .message(ex.getMessage())
+                        .build()
+                , HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<BaseResponse<Object>> handleNotReadableException(HttpMessageNotReadableException ex, WebRequest request) {
         log.info(ex.getMessage());
 
         return new ResponseEntity<>(

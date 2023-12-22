@@ -1,13 +1,11 @@
 package com.hust.bookstore.dto.request;
 
-import com.hust.bookstore.dto.OrderItemDto;
 import com.hust.bookstore.enumration.PaymentProvider;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -32,7 +30,7 @@ public class OrderRequest {
 
     private BigDecimal total;
 
-    List<OrderItemRequest> items;
+//    List<OrderItemRequest> items;
 
     private Long provinceId;
 

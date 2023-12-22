@@ -50,7 +50,8 @@ public enum ResponseCode {
     ORDER_NOT_FOUND("ORD-001", "Không tìm thấy đơn hàng"),
     PAYMENT_NOT_FOUND("PAY-001", "Không tìm thấy thông tin thanh toán"),
     GET_SHIPPING_SERVICE_FAILED("SHI-001", "Lấy thông tin dịch vụ vận chuyển thất bại"),
-    INVALID_REFRESH_TOKEN("REF-001", "Refresh token không hợp lệ");
+    INVALID_REFRESH_TOKEN("REF-001", "Refresh token không hợp lệ"),
+    GET_SHIPPING_FEE_FAILED("SHI-002", "Lấy thông tin phí vận chuyển thất bại");
 
     private final String code;
     private final String message;

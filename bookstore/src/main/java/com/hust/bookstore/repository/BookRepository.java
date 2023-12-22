@@ -17,7 +17,9 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
 
   @Query("SELECT b FROM Book b " +
-          "WHERE b.title LIKE :#{#input.getTitle()} " +
+          "WHERE " +
+          "b.isDeleted = false "+
+          "AND b.title LIKE :#{#input.getTitle()} " +
           "AND b.author LIKE :#{#input.getAuthor()} " +
           "AND (:#{#input.getPriceFrom()} IS NULL OR b.price >= :#{#input.getPriceFrom()}) " +
           "AND (:#{#input.getPriceTo()} IS NULL OR b.price <= :#{#input.getPriceTo()}) " +

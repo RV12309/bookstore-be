@@ -6,6 +6,12 @@ import com.hust.bookstore.enumration.Gender;
 import com.hust.bookstore.enumration.UserType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +22,9 @@ import java.time.LocalDateTime;
 @Entity
 @Builder
 @Table(name = "users")
-public class User extends BaseEntity{
+@DynamicUpdate
+@EntityListeners({AuditingEntityListener.class})
+public class User {
     @Id
     private Long id;
     private String email;
@@ -31,10 +39,28 @@ public class User extends BaseEntity{
     @Column(name = "account_id")
     private Long accountId;
 
+    private Long provinceId;
+    private Long districtId;
+    private Long wardCode;
     private String province;
     private String district;
     private String ward;
     private String firstAddress;
+
+    @Builder.Default
+    private Boolean isDeleted = false;
+
+    @CreatedBy
+    private String createdBy;
+
+    @LastModifiedBy
+    private String updatedBy;
+
+    @CreatedDate
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
     @PrePersist
     public void setId() {

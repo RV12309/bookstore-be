@@ -13,4 +13,6 @@ public interface UserAddressRepository extends JpaRepository<UserAddress, Long> 
     @Modifying
     @Query("UPDATE UserAddress u SET u.isDefault = false WHERE u.userId = ?1")
     void updateDefaultAddress(Long id);
+
+    List<UserAddress> findByUserId(Long id);
 }

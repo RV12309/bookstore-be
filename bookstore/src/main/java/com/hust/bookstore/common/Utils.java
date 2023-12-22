@@ -4,10 +4,13 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class Utils {
+    public static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
     Utils() {
         throw new IllegalStateException("Utility class");
     }

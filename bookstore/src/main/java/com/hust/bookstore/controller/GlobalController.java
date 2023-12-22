@@ -3,7 +3,10 @@ package com.hust.bookstore.controller;
 import com.hust.bookstore.dto.PageDto;
 import com.hust.bookstore.dto.request.*;
 import com.hust.bookstore.dto.response.*;
-import com.hust.bookstore.dto.response.delivery.*;
+import com.hust.bookstore.dto.response.delivery.DistrictResponse;
+import com.hust.bookstore.dto.response.delivery.ProvinceResponse;
+import com.hust.bookstore.dto.response.delivery.ShippingFeeResponse;
+import com.hust.bookstore.dto.response.delivery.WardResponse;
 import com.hust.bookstore.enumration.ResponseCode;
 import com.hust.bookstore.service.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -111,8 +114,8 @@ public class GlobalController {
 
     @Operation(summary = "Tạo mới đơn hàng")
     @PostMapping("/orders")
-    public ResponseEntity<BaseResponse<OrderResponse>> createOrder(@Valid @RequestBody OrderRequest request) {
-        return ResponseEntity.ok(BaseResponse.<OrderResponse>builder().code(ResponseCode.SUCCESS.code())
+    public ResponseEntity<BaseResponse<List<OrderResponse>>> createOrder(@Valid @RequestBody OrderRequest request) {
+        return ResponseEntity.ok(BaseResponse.<List<OrderResponse>>builder().code(ResponseCode.SUCCESS.code())
                 .message(ResponseCode.SUCCESS.message()).data(ordersService.createOrder(request)).build());
     }
 
@@ -133,7 +136,7 @@ public class GlobalController {
 
     @Operation(summary = "Lấy thông tin phí vận chuyển")
     @PostMapping("/shipping-fee")
-    public ResponseEntity<BaseResponse<ShippingFeeResponse>> getShippingFee(@Valid @RequestBody ShippingFeeRequest request) {
+    public ResponseEntity<BaseResponse<ShippingFeeResponse>> getShippingFee(@Valid @RequestBody CalculateShippingFeeRequest request) {
         return ResponseEntity.ok(BaseResponse.<ShippingFeeResponse>builder().code(ResponseCode.SUCCESS.code())
                 .message(ResponseCode.SUCCESS.message()).data(deliveryPartnerService.getShippingFee(request)).build());
     }

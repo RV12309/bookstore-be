@@ -34,11 +34,13 @@ import org.springframework.util.CollectionUtils;
 import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static com.hust.bookstore.common.Constants.*;
 import static com.hust.bookstore.enumration.ResponseCode.*;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Service
@@ -118,9 +120,11 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
         Long id = request.getId();
         log.info("Update user with id: {}", id);
         Account account = authService.getCurrentAccountLogin();
-        if(non(account.getId().equals(id))){
-            throw new BusinessException(USER_NOT_MATCH);
-        }
+        Account currentAccount = accountRepository.findById(account.getId())
+                .orElseThrow(() -> new BusinessException(ACCOUNT_NOT_FOUND));
+//        if (non(currentAccount.getUserId().equals(id))) {
+//            throw new BusinessException(USER_NOT_MATCH);
+//        }
         User user;
         if (nonNull(account.getUserId())) {
             user = userRepository.findById(id).orElse(new User());
@@ -130,8 +134,6 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
 
         log.info("Found user with id: {}", id);
         modelMapper.map(request, user);
-        Account currentAccount = accountRepository.findById(account.getId())
-                .orElseThrow(() -> new BusinessException(ACCOUNT_NOT_FOUND));
         user.setAccountId(currentAccount.getId());
         userRepository.save(user);
         currentAccount.setUserId(user.getId());
@@ -326,11 +328,53 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
     public UserResponse getUserDetail() {
         log.info("Get user detail");
         Account account = authService.getCurrentAccountLogin();
-        User user = checkExistUser(account.getId());
+        User user;
+
+        if (isNull(account.getUserId())) {
+            log.info("User info not found, create new");
+            User newUser = new User();
+            newUser.setAccountId(account.getId());
+            user = userRepository.save(newUser);
+        } else {
+            user = userRepository.findById(account.getUserId()).orElse(null);
+            if (isNull(user)) {
+                log.info("User info not found, create new");
+                User newUser = new User();
+                newUser.setAccountId(account.getId());
+                user = userRepository.save(newUser);
+            }
+        }
+
+        List<UserAddress> userAddresses = addressRepository.findByUserId(user.getId());
+        List<UserAddressResponse> userAddressesRes = new ArrayList<>();
+        if (non(CollectionUtils.isEmpty(userAddresses))) {
+            log.info("User address not found, create new");
+            userAddressesRes = userAddresses.stream().map(userAddress
+                    -> modelMapper.map(userAddress, UserAddressResponse.class)).toList();
+        }
+
         log.info("Get user detail successfully");
         UserResponse userResponse = modelMapper.map(user, UserResponse.class);
+        LocalDateTime dob = user.getDob();
+        //convert dob to string
+        if (nonNull(dob)) {
+            userResponse.setDob(dob.format(Utils.formatter));
+        }
+
         userResponse.setTypeName(account.getType().getName());
+        userResponse.setUserAddresses(userAddressesRes);
         return modelMapper.map(user, UserResponse.class);
+
+    }
+
+    @Override
+    public List<UserAddressResponse> getUserAddress() {
+        log.info("Get user address");
+        Account account = authService.getCurrentAccountLogin();
+        User user = checkExistUser(account.getId());
+        List<UserAddress> userAddresses = addressRepository.findByUserId(user.getId());
+        log.info("Get user address successfully");
+        return userAddresses.stream().map(userAddress -> modelMapper.map(userAddress, UserAddressResponse.class)).toList();
 
     }
 }

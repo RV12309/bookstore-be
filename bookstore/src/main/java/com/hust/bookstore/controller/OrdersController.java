@@ -1,13 +1,16 @@
 package com.hust.bookstore.controller;
 
+import com.hust.bookstore.dto.PageDto;
 import com.hust.bookstore.dto.request.OrderStatusRequest;
 import com.hust.bookstore.dto.request.PaymentStatusRequest;
+import com.hust.bookstore.dto.request.SearchOrderRequest;
 import com.hust.bookstore.dto.response.BaseResponse;
 import com.hust.bookstore.dto.response.OrderResponse;
 import com.hust.bookstore.enumration.ResponseCode;
 import com.hust.bookstore.service.OrdersService;
 import com.hust.bookstore.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,5 +41,18 @@ public class OrdersController {
                 .message(ResponseCode.SUCCESS.message()).build());
     }
 
+    @Operation(summary = "Lấy thông tin đơn hàng theo id")
+    @GetMapping("/{orderId}")
+    public ResponseEntity<BaseResponse<OrderResponse>> getOrder(@PathVariable Long orderId) {
+        return ResponseEntity.ok(BaseResponse.<OrderResponse>builder().code(ResponseCode.SUCCESS.code())
+                .message(ResponseCode.SUCCESS.message()).data(ordersService.getOrder(orderId)).build());
+    }
+
+    @Operation(summary = "Lấy danh sách đơn hàng của khách hàng")
+    @PostMapping
+    public ResponseEntity<BaseResponse<PageDto<OrderResponse>>> getOrders(@Valid @RequestBody SearchOrderRequest request) {
+        return ResponseEntity.ok(BaseResponse.<PageDto<OrderResponse>>builder().code(ResponseCode.SUCCESS.code())
+                .message(ResponseCode.SUCCESS.message()).data(ordersService.getOrders(request)).build());
+    }
 
 }

@@ -1,6 +1,7 @@
 package com.hust.bookstore.dto.response;
 
 import com.hust.bookstore.dto.OrderItemDto;
+import com.hust.bookstore.enumration.OrderStatus;
 import com.hust.bookstore.enumration.PaymentStatus;
 import lombok.*;
 
@@ -21,6 +22,7 @@ public class OrderResponse {
     PaymentStatus paymentStatus;
     String paymentStatusDesc;
     BigDecimal paymentAmount;
+    OrderStatus status;
     List<OrderItemDto> items;
 
 }

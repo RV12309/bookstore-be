@@ -4,6 +4,8 @@ import com.hust.bookstore.dto.UserDto;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @ApiResponse
@@ -16,5 +18,6 @@ public class UserResponse extends UserDto {
     private String username;
     private String createdAt;
     private String typeName;
+    List<UserAddressResponse> userAddresses;
 
 }

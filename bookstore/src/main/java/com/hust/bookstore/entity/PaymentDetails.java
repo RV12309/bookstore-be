@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @Entity
 @Builder
 @Table(name = "payment_details", indexes = {
-        @Index(name = "order_details_user_id_index", columnList = "user_id", unique = true),
+        @Index(name = "order_details_user_id_index", columnList = "user_id")
 })
 public class PaymentDetails extends BaseEntity {
 

@@ -30,9 +30,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> searchUsers(SearchUserRequest input, Pageable pageable);
 
     @Query("""
-            select accountId as id, name as name
-            from User
-            where accountId in :accountIds
+            select u.accountId as id, u.name as name
+            from User u
+            where u.accountId in :accountIds
             """)
     List<SellerProjection> findAllByAccountIdIn(List<Long> accountIds);
 

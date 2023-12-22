@@ -25,6 +25,7 @@ public class ShoppingCart extends BaseEntity {
     private Long userId;
 
     @Column(name = "total", precision = 10, scale = 2, nullable = false)
+    @Builder.Default
     private BigDecimal total = BigDecimal.ZERO;
 
     @PrePersist

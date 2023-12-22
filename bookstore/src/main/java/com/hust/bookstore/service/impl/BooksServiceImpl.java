@@ -25,9 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.hust.bookstore.common.Utils.generateIsbn;
@@ -176,14 +174,45 @@ public class BooksServiceImpl extends BusinessHelper implements BooksService {
         Page<Book> books = bookRepository.searchBooks(request, pageable);
         List<Book> content = books.getContent();
         List<Long> accountIds = content.stream().map(Book::getAccountId).distinct().toList();
-        List<SellerProjection> accounts = userRepository.findAllByAccountIdIn(accountIds);
-        Map<Long, String> accountMap = accounts.stream().collect(Collectors.toMap(SellerProjection::getId, SellerProjection::getName));
+        Map<Long, String> accountMap = new HashMap<>();
+        if (non(CollectionUtils.isEmpty(accountIds))) {
+            List<SellerProjection> accounts = userRepository.findAllByAccountIdIn(accountIds);
+            //filter null
+            accounts = accounts.stream().filter(Objects::nonNull).toList();
+            if (non(CollectionUtils.isEmpty(accounts)))
+                for (SellerProjection account : accounts) {
+                    if (account != null && account.getId() != null && account.getName() != null)
+                        accountMap.put(account.getId(), account.getName());
+                }
+        }
+
+        List<BookCategories> bookCategories
+                = bookCategoryRepository.findAllByBookIdIn(content.stream().map(Book::getId).toList());
+       List<Category> categories = categoryRepository.findAllById(bookCategories.stream().map(BookCategories::getCategoryId).toList());
+         Map<Long, List<Category>> categoryMap = new HashMap<>();
+        if (non(CollectionUtils.isEmpty(categories))) {
+            for (Category category : categories) {
+                if (category != null && category.getId() != null) {
+                    if (categoryMap.containsKey(category.getId())) {
+                        categoryMap.get(category.getId()).add(category);
+                    } else {
+                        categoryMap.put(category.getId(), List.of(category));
+                    }
+                }
+            }
+        }
 
         List<BookResponse> bookResponses = content.stream().map(book -> {
             BookResponse bookResponse = modelMapper.map(book, BookResponse.class);
             bookResponse.setSellerId(String.valueOf(book.getAccountId()));
             if (accountMap.containsKey(book.getAccountId()))
                 bookResponse.setSellerName(accountMap.get(book.getAccountId()));
+            if (categoryMap.containsKey(book.getId())){
+                List<Category> categoryList = categoryMap.get(book.getId());
+                List<CategoryResponse> categoryResponses = categoryList.stream()
+                        .map(category -> modelMapper.map(category, CategoryResponse.class)).toList();
+                bookResponse.setCategories(categoryResponses);
+            }
             return bookResponse;
         }).toList();
 

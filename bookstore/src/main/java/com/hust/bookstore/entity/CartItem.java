@@ -60,8 +60,5 @@ public class CartItem extends BaseEntity {
     @Builder.Default
     private Boolean isDeleted = false;
 
-    @OneToOne
-    @JoinColumn(name = "book_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private Book book;
 
 }

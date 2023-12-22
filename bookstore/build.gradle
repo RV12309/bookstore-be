@@ -58,7 +58,12 @@ dependencies {
     //feign client
     implementation 'io.github.openfeign:feign-okhttp:13.0'
 }
-
+def isNeedToRunTest = { taskName ->
+    return !taskName.contains('bootJar') && !taskName.contains('bootWar') && !taskName.contains('bootRun')
+}
 tasks.named('test') {
-    useJUnitPlatform()
+    enabled = isNeedToRunTest(it.name)
+}
+bootJar {
+    version = null
 }

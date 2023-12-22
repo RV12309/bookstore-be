@@ -5,6 +5,8 @@ public class Constants {
         throw new IllegalStateException("Constants class");
     }
 
+    public static final String TRACE_ID = "traceId";
+    public static final String X_REQUEST_ID = "X-Request-Id";
     public static final String CUSTOMER_ROLE = "CUSTOMER";
     public static final String ADMIN_ROLE = "ADMIN";
     public static final String SELLER_ROLE = "SELLER";

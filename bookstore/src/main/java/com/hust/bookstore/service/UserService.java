@@ -9,6 +9,8 @@ import com.hust.bookstore.enumration.UserType;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
+
 public interface UserService {
     ResponseEntity<BaseResponse<Object>> createAccount(AccountRequest request, UserType userType);
 
@@ -38,4 +40,6 @@ public interface UserService {
     UserAddressResponse addUserAddress(UserAddressRequest request);
 
     UserResponse getUserDetail();
+
+    List<UserAddressResponse> getUserAddress();
 }

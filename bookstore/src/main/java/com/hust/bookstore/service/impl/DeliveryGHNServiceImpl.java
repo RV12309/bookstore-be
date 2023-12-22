@@ -1,5 +1,6 @@
 package com.hust.bookstore.service.impl;
 
+import com.hust.bookstore.dto.request.CalculateShippingFeeRequest;
 import com.hust.bookstore.dto.request.OrderRequest;
 import com.hust.bookstore.dto.request.ShippingFeeRequest;
 import com.hust.bookstore.dto.request.ShippingServiceRequest;
@@ -264,8 +265,31 @@ public class DeliveryGHNServiceImpl extends BusinessHelper implements DeliveryPa
     }
 
     @Override
-    public ShippingFeeResponse getShippingFee(ShippingFeeRequest request) {
-        return null;
+    public ShippingFeeResponse getShippingFee(CalculateShippingFeeRequest request) {
+        try {
+            DeliveryPartnersConfig deliveryConfig = deliveryPartnerConfigRepo.findByProvider(GHN_EXPRESS)
+                    .orElseThrow(() -> new BusinessException(ResponseCode.CONFIG_DELIVERY_PARTNER_NOT_FOUND));
+
+            String getShippingFeeUrl = deliveryConfig.getApiUrl() + shippingFeeEndpoint;
+            Map<String, String> headers = buildHeaders(deliveryConfig);
+            headers.put("ShopId", deliveryConfig.getCode());
+            ShippingFeeRequest feeRequest = modelMapper.map(request, ShippingFeeRequest.class);
+            feeRequest.setWeight(500);
+            feeRequest.setFromDistrictId(1454);
+            feeRequest.setFromWardCode("21211");
+            HashMap<String, Object> response = doPost(getShippingFeeUrl,
+                    request, buildHeaders(deliveryConfig), getNewTypeReference());
+            if (isNull(response) || non(response.get("code").equals(200))) {
+                log.error("Error when get shipping fee: {}", response);
+                throw new BusinessException(ResponseCode.GET_SHIPPING_FEE_FAILED);
+            }
+            Object data = response.get("data");
+            String dataString = objectMapper.writeValueAsString(data);
+            return objectMapper.readValue(dataString, ShippingFeeResponse.class);
+        } catch (Exception e) {
+            log.error("Error when get shipping fee: {}", e.getMessage());
+            throw new BusinessException(ResponseCode.GET_SHIPPING_FEE_FAILED);
+        }
     }
 
     private Map<String, String> buildHeaders(DeliveryPartnersConfig deliveryPartnersConfig) {

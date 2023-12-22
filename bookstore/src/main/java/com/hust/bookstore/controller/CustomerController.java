@@ -13,6 +13,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 import static com.hust.bookstore.enumration.ResponseCode.SUCCESS;
 
 @RestController
@@ -61,6 +63,16 @@ public class CustomerController {
                 .code(SUCCESS.code())
                 .message(SUCCESS.message())
                 .data(userService.addUserAddress(request)).build());
+    }
+
+    @Operation(summary = "Thêm địa chỉ khách hàng")
+    @GetMapping("/address")
+    ResponseEntity<BaseResponse<List<UserAddressResponse>>> getUserAddress() {
+
+        return ResponseEntity.ok(BaseResponse.<List<UserAddressResponse>>builder()
+                .code(SUCCESS.code())
+                .message(SUCCESS.message())
+                .data(userService.getUserAddress()).build());
     }
 
     @Operation(summary = "Lấy thông tin chi tiết khách hàng")

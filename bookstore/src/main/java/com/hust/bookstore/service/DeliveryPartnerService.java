@@ -1,14 +1,17 @@
 package com.hust.bookstore.service;
 
+import com.hust.bookstore.dto.request.CalculateShippingFeeRequest;
 import com.hust.bookstore.dto.request.OrderRequest;
-import com.hust.bookstore.dto.request.ShippingFeeRequest;
 import com.hust.bookstore.dto.request.ShippingServiceRequest;
 import com.hust.bookstore.dto.request.delivery.GHNShopInfoRequest;
 import com.hust.bookstore.dto.request.delivery.TokenRequest;
 import com.hust.bookstore.dto.response.AvailableShippingServiceResponse;
 import com.hust.bookstore.dto.response.PartnerAuthResponse;
 import com.hust.bookstore.dto.response.PartnerBaseResponse;
-import com.hust.bookstore.dto.response.delivery.*;
+import com.hust.bookstore.dto.response.delivery.DistrictResponse;
+import com.hust.bookstore.dto.response.delivery.ProvinceResponse;
+import com.hust.bookstore.dto.response.delivery.ShippingFeeResponse;
+import com.hust.bookstore.dto.response.delivery.WardResponse;
 import com.hust.bookstore.entity.Account;
 import com.hust.bookstore.entity.User;
 
@@ -31,5 +34,5 @@ public interface DeliveryPartnerService {
 
     List<AvailableShippingServiceResponse> getShippingServices(ShippingServiceRequest request);
 
-    ShippingFeeResponse getShippingFee(ShippingFeeRequest request);
+    ShippingFeeResponse getShippingFee(CalculateShippingFeeRequest request);
 }

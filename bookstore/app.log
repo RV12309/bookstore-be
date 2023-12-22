@@ -1,0 +1,30 @@
+2023-10-27T19:11:41.505+07:00  INFO 29756 --- [restartedMain] c.hust.bookstore.BookstoreApplication    : Starting BookstoreApplication using Java 17.0.3.1 with PID 29756 (D:\bookstore\bookstore\build\classes\java\main started by dattb in D:\bookstore\bookstore)
+2023-10-27T19:11:41.513+07:00  INFO 29756 --- [restartedMain] c.hust.bookstore.BookstoreApplication    : The following 1 profile is active: "dev"
+2023-10-27T19:11:41.600+07:00  INFO 29756 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2023-10-27T19:11:41.600+07:00  INFO 29756 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2023-10-27T19:11:42.887+07:00  INFO 29756 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2023-10-27T19:11:43.018+07:00  INFO 29756 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 120 ms. Found 6 JPA repository interfaces.
+2023-10-27T19:11:43.820+07:00  INFO 29756 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9000 (http)
+2023-10-27T19:11:43.834+07:00  INFO 29756 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-10-27T19:11:43.834+07:00  INFO 29756 --- [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.13]
+2023-10-27T19:11:43.980+07:00  INFO 29756 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2023-10-27T19:11:43.980+07:00  INFO 29756 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2379 ms
+2023-10-27T19:11:44.140+07:00  INFO 29756 --- [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2023-10-27T19:11:44.233+07:00  INFO 29756 --- [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.2.9.Final
+2023-10-27T19:11:44.239+07:00  INFO 29756 --- [restartedMain] org.hibernate.cfg.Environment            : HHH000406: Using bytecode reflection optimizer
+2023-10-27T19:11:44.454+07:00  INFO 29756 --- [restartedMain] o.h.b.i.BytecodeProviderInitiator        : HHH000021: Bytecode provider name : bytebuddy
+2023-10-27T19:11:44.630+07:00  INFO 29756 --- [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2023-10-27T19:11:44.647+07:00  INFO 29756 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2023-10-27T19:11:44.809+07:00  INFO 29756 --- [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@120aab41
+2023-10-27T19:11:44.811+07:00  INFO 29756 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2023-10-27T19:11:45.154+07:00  INFO 29756 --- [restartedMain] o.h.b.i.BytecodeProviderInitiator        : HHH000021: Bytecode provider name : bytebuddy
+2023-10-27T19:11:46.010+07:00  INFO 29756 --- [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2023-10-27T19:11:46.112+07:00  INFO 29756 --- [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2023-10-27T19:11:46.630+07:00  INFO 29756 --- [restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2023-10-27T19:11:48.835+07:00  INFO 29756 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@78ce43ae, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@2a935d0, org.springframework.security.web.context.SecurityContextHolderFilter@7af48b53, org.springframework.security.web.header.HeaderWriterFilter@67c3f32e, org.springframework.web.filter.CorsFilter@4a893b05, org.springframework.security.web.authentication.logout.LogoutFilter@39fca978, com.hust.bookstore.filter.JwtAuthenticationFilter@6edf8bf7, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@435252f3, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@43e85963, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@54c3162c, org.springframework.security.web.session.SessionManagementFilter@1801558d, org.springframework.security.web.access.ExceptionTranslationFilter@5c743d21, org.springframework.security.web.access.intercept.AuthorizationFilter@157dec13]
+2023-10-27T19:11:49.151+07:00  INFO 29756 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2023-10-27T19:11:49.196+07:00  INFO 29756 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9000 (http) with context path '/api'
+2023-10-27T19:11:49.204+07:00  INFO 29756 --- [restartedMain] c.hust.bookstore.BookstoreApplication    : Started BookstoreApplication in 8.245 seconds (process running for 9.362)
+2023-10-27T19:13:15.439+07:00  INFO 29756 --- [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2023-10-27T19:13:15.442+07:00  INFO 29756 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2023-10-27T19:13:15.450+07:00  INFO 29756 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
