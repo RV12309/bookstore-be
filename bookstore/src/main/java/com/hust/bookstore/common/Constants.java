@@ -12,13 +12,19 @@ public class Constants {
     public static final String SELLER_ROLE = "SELLER";
     public static final String ROLE = "role";
     public static final String TOKEN = "token";
-    public static final String REFRESH_TOKEN ="refreshToken";
+    public static final String REFRESH_TOKEN = "refreshToken";
     public static final String USERNAME = "username";
     public static final String ACCOUNT = "account";
 
     public static final String EMAIL = "email";
     public static final String ACTIVE_LINK = "activeLink";
     public static final String PASSWORD = "password";
+    public static final String ORDER_ID = "orderId";
+    public static final String ITEMS = "items";
+    public static final String EXPECTED_DATE = "expectDate";
+    public static final String TOLTAL = "total";
+    public static final String DETAIL_ADDRESS = "detailAddress";
+    public static final String PAYMENT_METHOD = "paymentMethod";
 
     public static final String VERIFICATION_CODE = "verificationCode";
 

@@ -33,10 +33,11 @@ public class BookController {
     }
 
     @Operation(summary = "Cập nhật sách")
-    @PutMapping
-    public ResponseEntity<BaseResponse<BookResponse>> updateBook(@Valid @RequestBody UpdateBookRequest bookRequest) {
+    @PutMapping("/{id}")
+    public ResponseEntity<BaseResponse<BookResponse>> updateBook(@PathVariable Long id,
+                                                                 @Valid @RequestBody UpdateBookRequest bookRequest) {
         return ResponseEntity.ok(BaseResponse.<BookResponse>builder().code(ResponseCode.SUCCESS.code())
-                .message(ResponseCode.SUCCESS.message()).data(booksService.updateBook(bookRequest)).build());
+                .message(ResponseCode.SUCCESS.message()).data(booksService.updateBook(bookRequest, id)).build());
     }
 
     @Operation(summary = "Xóa sách theo mã ISBN")

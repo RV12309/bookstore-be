@@ -1,5 +1,6 @@
 package com.hust.bookstore.controller;
 
+import com.hust.bookstore.dto.PageDto;
 import com.hust.bookstore.dto.request.SearchUserRequest;
 import com.hust.bookstore.dto.request.UpdateUserRequest;
 import com.hust.bookstore.dto.response.BaseResponse;
@@ -31,10 +32,10 @@ public class UserController {
     }
 
     @Operation(summary = "Danh sách người dùng")
-    @GetMapping
-    ResponseEntity<BaseResponse<Page<UserResponse>>> searchUsers(@RequestBody SearchUserRequest request) {
-        Page<UserResponse> users = userService.searchUsers(request);
-        return ResponseEntity.ok(BaseResponse.<Page<UserResponse>>builder()
+    @PostMapping
+    ResponseEntity<BaseResponse<PageDto<UserResponse>>> searchUsers(@Valid @RequestBody  SearchUserRequest request) {
+        PageDto<UserResponse> users = userService.searchUsers(request);
+        return ResponseEntity.ok(BaseResponse.<PageDto<UserResponse>>builder()
                 .code(SUCCESS.code())
                 .message(SUCCESS.message()).data(users).build());
     }

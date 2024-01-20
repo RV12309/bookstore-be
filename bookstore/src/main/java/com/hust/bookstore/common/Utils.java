@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 public class Utils {
     public static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
+    public static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     Utils() {
         throw new IllegalStateException("Utility class");
     }

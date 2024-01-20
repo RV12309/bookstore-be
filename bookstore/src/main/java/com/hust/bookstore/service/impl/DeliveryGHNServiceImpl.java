@@ -1,12 +1,9 @@
 package com.hust.bookstore.service.impl;
 
 import com.hust.bookstore.dto.request.CalculateShippingFeeRequest;
-import com.hust.bookstore.dto.request.OrderRequest;
 import com.hust.bookstore.dto.request.ShippingFeeRequest;
 import com.hust.bookstore.dto.request.ShippingServiceRequest;
-import com.hust.bookstore.dto.request.delivery.AvailableShippingServiceRequest;
-import com.hust.bookstore.dto.request.delivery.GHNShopInfoRequest;
-import com.hust.bookstore.dto.request.delivery.TokenRequest;
+import com.hust.bookstore.dto.request.delivery.*;
 import com.hust.bookstore.dto.response.AvailableShippingServiceResponse;
 import com.hust.bookstore.dto.response.PartnerAuthResponse;
 import com.hust.bookstore.dto.response.PartnerBaseResponse;
@@ -51,6 +48,9 @@ public class DeliveryGHNServiceImpl extends BusinessHelper implements DeliveryPa
     @Value("${endpoint.partner.ghn.order.detail}")
     private String orderDetailEndpoint;
 
+    @Value("${endpoint.partner.ghn.order.cancel}")
+    private String cancelOrderEndpoint;
+
     @Value("${endpoint.partner.ghn.address.province}")
     private String provinceEndpoint;
 
@@ -74,12 +74,13 @@ public class DeliveryGHNServiceImpl extends BusinessHelper implements DeliveryPa
                                   CategoryRepository categoryRepository, BookCategoryRepository bookCategoryRepository,
                                   AccountRepository accountRepository, AuthService authService,
                                   BookImageRepository bookImageRepository, ModelMapper modelMapper,
-                                  NotificationService notificationService, UserAddressRepository addressRepository) {
+                                  NotificationService notificationService, UserAddressRepository addressRepository,
+                                  DeliveryDetailRepository deliveryDetailRepository) {
         super(bookRepository, cartRepository, cartItemRepository, paymentRepository,
                 deliveryPartnerConfigRepo, storeDeliveryPartnerRepo, userRepository,
                 orderDetailsRepository, orderItemsRepository, categoryRepository,
                 bookCategoryRepository, accountRepository, authService, bookImageRepository,
-                modelMapper, notificationService, addressRepository);
+                modelMapper, notificationService, addressRepository, deliveryDetailRepository);
     }
 
     @Override
@@ -125,14 +126,28 @@ public class DeliveryGHNServiceImpl extends BusinessHelper implements DeliveryPa
     }
 
     @Override
-    public PartnerBaseResponse<PartnerAuthResponse> createOrder(OrderRequest orderRequest, Long shopAccountId) {
-        StoreDeliveryPartners storeDeliveryPartner = storeDeliveryPartnerRepo.findByAccountIdAndIsDefaultTrue(shopAccountId)
-                .orElseThrow(() -> new BusinessException(ResponseCode.DELIVERY_PARTNER_NOT_FOUND));
+    public String createOrder(DeliveryRequest deliveryRequest) {
 
-        DeliveryPartnersConfig deliveryPartnersConfig = deliveryPartnerConfigRepo.findByProvider(storeDeliveryPartner.getProvider())
+        DeliveryPartnersConfig deliveryPartnersConfig = deliveryPartnerConfigRepo.findByProvider(GHN_EXPRESS)
                 .orElseThrow(() -> new BusinessException(ResponseCode.CONFIG_DELIVERY_PARTNER_NOT_FOUND));
-
-        return null;
+        String createOrderUrl = deliveryPartnersConfig.getApiUrl() + newOrderEndpoint;
+        try {
+            HashMap<String, Object> response = doPost(createOrderUrl,
+                    deliveryRequest, buildHeaders(deliveryPartnersConfig), getNewTypeReference());
+            if (isNull(response) || non(response.get("code").equals(200))) {
+                log.error("Error when create order: {}", response);
+                String message = (String) response.get("message");
+                log.error("Message: {}", message);
+                throw new BusinessException(ResponseCode.CREATE_ORDER_FAILED);
+            }
+            Object data = response.get("data");
+            String dataString = objectMapper.writeValueAsString(data);
+            DeliveryResponse orderResponse = objectMapper.readValue(dataString, DeliveryResponse.class);
+            return orderResponse.getOrderCode();
+        } catch (Exception e) {
+            log.error("Error when create order: {}", e.getMessage());
+            throw new BusinessException(ResponseCode.CREATE_ORDER_FAILED);
+        }
     }
 
     @Override
@@ -147,6 +162,8 @@ public class DeliveryGHNServiceImpl extends BusinessHelper implements DeliveryPa
                     districtRequest, buildHeaders(deliveryConfig), getNewTypeReference());
             if (isNull(response) || non(response.get("code").equals(200))) {
                 log.error("Error when get district: {}", response);
+                String message = (String) response.get("message");
+                log.error("Message: {}", message);
                 throw new BusinessException(ResponseCode.GET_DISTRICT_FAILED);
             }
             Object data = response.get("data");
@@ -176,6 +193,8 @@ public class DeliveryGHNServiceImpl extends BusinessHelper implements DeliveryPa
                     wardRequest, buildHeaders(deliveryConfig), getNewTypeReference());
             if (isNull(response) || non(response.get("code").equals(200))) {
                 log.error("Error when get ward: {}", response);
+                String message = (String) response.get("message");
+                log.error("Message: {}", message);
                 throw new BusinessException(ResponseCode.GET_WARD_FAILED);
             }
             Object data = response.get("data");
@@ -203,6 +222,8 @@ public class DeliveryGHNServiceImpl extends BusinessHelper implements DeliveryPa
                     new HashMap<>(), buildHeaders(deliveryConfig), getNewTypeReference());
             if (isNull(response) || non(response.get("code").equals(200))) {
                 log.error("Error when get province: {}", response);
+                String message = (String) response.get("message");
+                log.error("Message: {}", message);
                 throw new BusinessException(ResponseCode.GET_PROVINCE_FAILED);
             }
             Object data = response.get("data");
@@ -235,6 +256,8 @@ public class DeliveryGHNServiceImpl extends BusinessHelper implements DeliveryPa
                     service, buildHeaders(deliveryConfig), getNewTypeReference());
             if (isNull(response) || non(response.get("code").equals(200))) {
                 log.error("Error when get shipping service: {}", response);
+                String message = (String) response.get("message");
+                log.error("Message: {}", message);
                 throw new BusinessException(ResponseCode.GET_SHIPPING_SERVICE_FAILED);
             }
             Object data = response.get("data");
@@ -281,6 +304,8 @@ public class DeliveryGHNServiceImpl extends BusinessHelper implements DeliveryPa
                     request, buildHeaders(deliveryConfig), getNewTypeReference());
             if (isNull(response) || non(response.get("code").equals(200))) {
                 log.error("Error when get shipping fee: {}", response);
+                String message = (String) response.get("message");
+                log.error("Message: {}", message);
                 throw new BusinessException(ResponseCode.GET_SHIPPING_FEE_FAILED);
             }
             Object data = response.get("data");
@@ -289,6 +314,37 @@ public class DeliveryGHNServiceImpl extends BusinessHelper implements DeliveryPa
         } catch (Exception e) {
             log.error("Error when get shipping fee: {}", e.getMessage());
             throw new BusinessException(ResponseCode.GET_SHIPPING_FEE_FAILED);
+        }
+    }
+
+    @Override
+    public void cancelOrder(String trackingCode) {
+        try {
+            DeliveryPartnersConfig deliveryConfig = deliveryPartnerConfigRepo.findByProvider(GHN_EXPRESS)
+                    .orElseThrow(() -> new BusinessException(ResponseCode.CONFIG_DELIVERY_PARTNER_NOT_FOUND));
+
+            String getShippingFeeUrl = deliveryConfig.getApiUrl() + cancelOrderEndpoint;
+            Map<String, String> headers = buildHeaders(deliveryConfig);
+            headers.put("ShopId", deliveryConfig.getCode());
+            HashMap<String, Object> response = doPost(getShippingFeeUrl,
+                    new HashMap<>(), buildHeaders(deliveryConfig), getNewTypeReference());
+            if (isNull(response) || non(response.get("code").equals(200))) {
+                log.error("Error when get shipping fee: {}", response);
+                throw new BusinessException(ResponseCode.DELIVERY_NOT_FOUND);
+            }
+            Object data = response.get("data");
+            String dataString = objectMapper.writeValueAsString(data);
+            CancelDeliveryResponse deliveryResponse = objectMapper.readValue(dataString, CancelDeliveryResponse.class);
+            if (isNull(deliveryResponse) || non(deliveryResponse.getOrderCode().equals(trackingCode))) {
+                throw new BusinessException(ResponseCode.DELIVERY_NOT_FOUND);
+            }
+            if (non(deliveryResponse.isResult())) {
+                log.info("Order {} is not cancel", trackingCode);
+            }
+            log.info("Order {} is cancel", trackingCode);
+        } catch (Exception e) {
+            log.error("Error when cancel order: {}", e.getMessage());
+            throw new BusinessException(ResponseCode.DELIVERY_NOT_FOUND);
         }
     }
 

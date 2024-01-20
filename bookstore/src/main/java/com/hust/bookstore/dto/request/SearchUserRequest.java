@@ -10,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Getter
+@ToString
 public class SearchUserRequest {
 
     private String username;

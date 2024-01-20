@@ -2,33 +2,43 @@ package com.hust.bookstore.service.impl;
 
 import com.hust.bookstore.dto.OrderItemDto;
 import com.hust.bookstore.dto.PageDto;
-import com.hust.bookstore.dto.request.OrderRequest;
-import com.hust.bookstore.dto.request.OrderStatusRequest;
-import com.hust.bookstore.dto.request.PaymentStatusRequest;
-import com.hust.bookstore.dto.request.SearchOrderRequest;
+import com.hust.bookstore.dto.request.*;
+import com.hust.bookstore.dto.request.delivery.DeliveryRequest;
 import com.hust.bookstore.dto.response.OrderResponse;
+import com.hust.bookstore.dto.response.OrderStatisticResponse;
+import com.hust.bookstore.dto.response.RevenueStatisticResponse;
 import com.hust.bookstore.entity.*;
 import com.hust.bookstore.enumration.*;
 import com.hust.bookstore.exception.BusinessException;
 import com.hust.bookstore.helper.BusinessHelper;
 import com.hust.bookstore.repository.*;
+import com.hust.bookstore.repository.projection.StatOderTypeProjection;
+import com.hust.bookstore.repository.projection.StatRevenueProjection;
 import com.hust.bookstore.service.AuthService;
+import com.hust.bookstore.service.DeliveryPartnerService;
 import com.hust.bookstore.service.NotificationService;
 import com.hust.bookstore.service.OrdersService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.thymeleaf.context.Context;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static com.hust.bookstore.common.Constants.*;
+import static com.hust.bookstore.common.Utils.dateTimeFormatter;
+import static com.hust.bookstore.common.Utils.formatter;
 import static com.hust.bookstore.enumration.PaymentStatus.PENDING;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -38,6 +48,9 @@ import static java.util.stream.Collectors.toMap;
 @Service
 @Slf4j
 public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
+    @Value("${endpoint.partner.ghn.order.tracking}")
+    private String trackingUrl;
+    private final DeliveryPartnerService deliveryPartnerService;
 
     public OrdersServiceImpl(BookRepository bookRepository, CartRepository cartRepository,
                              CartItemRepository cartItemRepository, PaymentRepository paymentRepository,
@@ -47,12 +60,14 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                              CategoryRepository categoryRepository, BookCategoryRepository bookCategoryRepository,
                              AccountRepository accountRepository, AuthService authService,
                              BookImageRepository bookImageRepository, ModelMapper modelMapper,
-                             NotificationService notificationService, UserAddressRepository addressRepository) {
+                             NotificationService notificationService, UserAddressRepository addressRepository,
+                             DeliveryPartnerService deliveryPartnerService, DeliveryDetailRepository deliveryDetailRepository) {
         super(bookRepository, cartRepository, cartItemRepository, paymentRepository,
                 deliveryPartnerConfigRepo, storeDeliveryPartnerRepo, userRepository,
                 orderDetailsRepository, orderItemsRepository, categoryRepository,
                 bookCategoryRepository, accountRepository, authService, bookImageRepository,
-                modelMapper, notificationService, addressRepository);
+                modelMapper, notificationService, addressRepository, deliveryDetailRepository);
+        this.deliveryPartnerService = deliveryPartnerService;
     }
 
     @Override
@@ -81,7 +96,15 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                         .name(request.getName())
                         .phone(request.getPhone())
                         .gender(Gender.OTHER)
+                        .type(UserType.CUSTOMER)
                         .accountId(currentAccount.getId())
+                        .firstAddress(request.getFirstAddress())
+                        .ward(request.getWard())
+                        .district(request.getDistrict())
+                        .province(request.getProvince())
+                        .wardCode(request.getWardCode())
+                        .districtId(request.getDistrictId())
+                        .provinceId(request.getProvinceId())
                         .build();
                 savedUser = userRepository.save(user);
             } else {
@@ -95,6 +118,14 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     .name(request.getName())
                     .phone(request.getPhone())
                     .gender(Gender.OTHER)
+                    .type(UserType.GUEST)
+                    .firstAddress(request.getFirstAddress())
+                    .ward(request.getWard())
+                    .district(request.getDistrict())
+                    .province(request.getProvince())
+                    .wardCode(request.getWardCode())
+                    .districtId(request.getDistrictId())
+                    .provinceId(request.getProvinceId())
                     .build();
             savedUser = userRepository.save(user);
         }
@@ -110,10 +141,29 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
         log.info("Start delete cart item");
         cartItemRepository.deleteAll(cartItems);
         log.info("End delete cart item");
+        if (nonNull(cart.getUserId())) {
+            log.info("Start delete cart");
+            cartRepository.delete(cart);
+            log.info("End delete cart");
+        }
 
-        log.info("Start delete cart");
-        cartRepository.delete(cart);
-        log.info("End delete cart");
+        List<DeliveryDetails> deliveryDetails = new ArrayList<>();
+        for (OrderDetails order : savedOrders) {
+            DeliveryDetails deliveryDetail = DeliveryDetails.builder()
+                    .orderId(order.getId())
+                    .status(DeliveryStatus.PENDING)
+                    .firstAddress(request.getFirstAddress())
+                    .ward(request.getWard())
+                    .district(request.getDistrict())
+                    .province(request.getProvince())
+                    .wardCode(request.getWardCode())
+                    .districtId(request.getDistrictId())
+                    .provinceId(request.getProvinceId())
+                    .build();
+            deliveryDetails.add(deliveryDetail);
+        }
+        deliveryDetailRepository.saveAll(deliveryDetails);
+        log.info("Save delivery details success");
 
         log.info("Start create order response");
         //create map response by order id
@@ -125,9 +175,13 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
         List<Book> books = bookRepository.findAllById(bookIds);
         Map<Long, Book> bookMap = books.stream().collect(toMap(Book::getId, Function.identity()));
         //create response
+        List<OrderItemDto> items = new ArrayList<>();
         List<OrderResponse> orderResponses = orderMap.values().stream().map(order -> {
             PaymentDetails paymentDetails = paymentMap.get(order.getId());
             List<OrderItems> orderItems = orderItemMap.get(order.getId());
+            List<OrderItemDto> itemDtos = mapItemToOerItemResponse(orderItems, bookMap);
+            items.addAll(itemDtos);
+            sendOrderNotification(request, savedUser, itemDtos, order, now);
             return OrderResponse.builder()
                     .orderId(String.valueOf(order.getId()))
                     .total(order.getTotal())
@@ -138,12 +192,26 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     .paymentProvider(paymentDetails.getProvider().name())
                     .paymentProviderDesc(paymentDetails.getProvider().name())
                     .status(order.getStatus())
-                    .items(mapItemToOerItemResponse(orderItems, bookMap))
+                    .items(itemDtos)
                     .build();
         }).toList();
-
         log.info("End create order success");
         return orderResponses;
+    }
+
+    private void sendOrderNotification(OrderRequest request, User savedUser, List<OrderItemDto> items, OrderDetails order, LocalDateTime now) {
+        log.info("Send notification email to {}", savedUser.getEmail());
+        Context context = new Context();
+        context.setVariable(ITEMS, items);
+        context.setVariable(ORDER_ID, order.getId());
+        context.setVariable(USERNAME, savedUser.getName());
+        context.setVariable(EXPECTED_DATE, formatter.format(now.plusDays(3)));
+        context.setVariable(TOLTAL, order.getTotal());
+        context.setVariable(DETAIL_ADDRESS, request.getFirstAddress() + ", " + request.getWard() +
+                ", " + request.getDistrict() + ", " + request.getProvince());
+        context.setVariable(PAYMENT_METHOD, request.getPaymentProvider().name());
+        notificationService.send(MailTemplate.NEW_ORDER, context, savedUser.getEmail());
+        log.info("End send notification email to {}", savedUser.getEmail());
     }
 
     @NotNull
@@ -170,7 +238,15 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
         PaymentDetails payment = paymentRepository.findByOrderId(orderId).orElse(null);
         if (payment == null) {
             log.info("Payment not found, throw exception");
-
+        }
+        User buyer = userRepository.findById(order.getUserId()).orElse(null);
+        if (buyer == null) {
+            log.info("Buyer not found, throw exception");
+        }
+        Account account = accountRepository.findById(order.getSellerId()).orElse(null);
+        User seller = null;
+        if (nonNull(account)) {
+            seller = userRepository.findById(account.getUserId()).orElse(null);
         }
         log.info("Start create order response");
         OrderResponse orderResponse = OrderResponse.builder()
@@ -182,6 +258,13 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                 .paymentStatus(nonNull(payment) ? payment.getStatus() : null)
                 .paymentProvider(nonNull(payment) ? payment.getProvider().name() : null)
                 .paymentProviderDesc(nonNull(payment) ? payment.getProvider().name() : null)
+                .status(order.getStatus())
+                .fromAddress(isNull(seller) ? null : seller.getFirstAddress() + ", " + seller.getWard() +
+                        ", " + seller.getDistrict() + ", " + seller.getProvince())
+                .toAddress(isNull(buyer) ? null : buyer.getFirstAddress() + ", " + buyer.getWard() + ", "
+                        + buyer.getDistrict() + ", " + buyer.getProvince())
+                .senderName(isNull(seller) ? null : seller.getName())
+                .buyerName(isNull(buyer) ? null : buyer.getName())
                 .build();
 
         List<OrderItems> orderItems = orderItemsRepository.findAllByOrderId(orderId);
@@ -192,8 +275,13 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
             List<OrderItemDto> itemDtos = mapItemToOerItemResponse(orderItems, bookMap);
             orderResponse.setItems(itemDtos);
         }
+        DeliveryDetails deliveryDetails = deliveryDetailRepository.findByOrderId(orderId).orElse(null);
+        if (nonNull(deliveryDetails)) {
+            orderResponse.setTrackingCode(deliveryDetails.getTrackingCode());
+            String urlTracking = trackingUrl + deliveryDetails.getTrackingCode();
+            orderResponse.setUrlTracking(urlTracking);
+        }
 
-        log.info("End create order response");
         log.info("End get order success");
         return orderResponse;
     }
@@ -230,13 +318,117 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
     }
 
     @Override
+    @Transactional
     public void updateStatus(Long orderId, OrderStatusRequest request) {
         log.info("Start update order status");
         OrderDetails order = checkExistOrder(orderId);
         order.setStatus(request.getStatus());
         orderDetailsRepository.save(order);
+        if (OrderStatus.PROCESSING.equals(request.getStatus())) {
+            createShipping(order);
+        }
+        if (OrderStatus.CANCELLED.equals(request.getStatus())) {
+            sendCancelOrderToDelivery(order);
+        }
         //Todo save history or notification
         log.info("End update order status");
+    }
+
+    private void sendCancelOrderToDelivery(OrderDetails order) {
+        log.info("Start send cancel order to delivery");
+        DeliveryDetails deliveryDetails = deliveryDetailRepository.findByOrderId(order.getId()).orElse(null);
+        if (isNull(deliveryDetails)) {
+            log.info("Delivery details not found, throw exception");
+            return;
+        }
+        deliveryPartnerService.cancelOrder(deliveryDetails.getTrackingCode());
+        deliveryDetails.setStatus(DeliveryStatus.CANCELLED);
+        deliveryDetailRepository.save(deliveryDetails);
+        log.info("End send cancel order to delivery");
+    }
+
+    private void createShipping(OrderDetails order) {
+        log.info("Start create shipping");
+        Account seller = authService.getCurrentAccountLogin();
+        if (isNull(seller)) {
+            log.info("Current account not found, throw exception");
+            throw new BusinessException(ResponseCode.ACCOUNT_NOT_FOUND);
+        }
+        User sellerUser = userRepository.findById(seller.getUserId()).orElse(null);
+
+        List<OrderItems> orderItems = orderItemsRepository.findAllByOrderId(order.getId());
+        if (CollectionUtils.isEmpty(orderItems)) {
+            log.info("Order items not found, throw exception");
+            throw new BusinessException(ResponseCode.ORDER_ITEM_NOT_FOUND);
+        }
+        List<Long> bookIds = orderItems.stream().map(OrderItems::getBookId).toList();
+        List<Book> books = bookRepository.findAllById(bookIds);
+        Map<Long, Book> bookMap = books.stream().collect(toMap(Book::getId, Function.identity()));
+        User user = userRepository.findById(order.getUserId()).orElse(null);
+        if (isNull(user)) {
+            log.info("Account not found, throw exception");
+            throw new BusinessException(ResponseCode.ACCOUNT_NOT_FOUND);
+        }
+        PaymentDetails payment = paymentRepository.findByOrderId(order.getId()).orElse(null);
+        DeliveryDetails deliveryDetails = deliveryDetailRepository.findByOrderId(order.getId()).orElse(null);
+        DeliveryRequest deliveryRequest = DeliveryRequest.builder()
+                .paymentTypeId(isNull(payment) ? 2 : (payment.getProvider() == PaymentProvider.COD ? 2 : 1))
+                .note("Something")
+                .requiredNote("KHONGCHOXEMHANG")
+                .fromName(isNull(sellerUser) ? "Bookstore" : sellerUser.getName())
+                .fromPhone(isNull(sellerUser) ? null : sellerUser.getPhone())
+                .fromAddress(isNull(sellerUser) ? null : sellerUser.getFirstAddress() +
+                        ", " + sellerUser.getWard() + ", " + sellerUser.getDistrict() + ", " + sellerUser.getProvince())
+                .fromWardName(isNull(sellerUser) ? "" : sellerUser.getWard())
+                .fromDistrictName(sellerUser.getDistrict())
+                .fromProvinceName(sellerUser.getProvince())
+                .fromWardCode(String.valueOf(sellerUser.getWardCode()))
+                .returnPhone(sellerUser.getPhone())
+                .returnDistrictId(sellerUser.getDistrictId())
+                .returnWardCode(String.valueOf(sellerUser.getWardCode()))
+                .clientOrderCode(String.valueOf(order.getId()))
+                .toName(user.getName())
+                .toPhone(user.getPhone())
+                .toAddress(isNull(deliveryDetails) ? "" : (deliveryDetails.getFirstAddress() + ", " + deliveryDetails.getWard() + ", "
+                        + deliveryDetails.getDistrict() + ", " + deliveryDetails.getProvince()))
+                .toWardCode(isNull(deliveryDetails) ? "" : String.valueOf(deliveryDetails.getWardCode()))
+                .toDistrictId(isNull(deliveryDetails) ? 0 : deliveryDetails.getDistrictId())
+                .codAmount(order.getTotal().intValue())
+                .content("Something")
+                .weight(200)
+                .length(1)
+                .width(19)
+                .height(10)
+                .serviceTypeId(2)
+                .serviceId(53320)//hàng nhẹ
+                .coupon("")
+                .pickShift(List.of(2, 3, 4))
+                .items(orderItems.stream().map(item -> {
+                    Book book = bookMap.get(item.getBookId());
+                    return DeliveryRequest.Item.builder()
+                            .code(String.valueOf(book.getId()))
+                            .name(book.getTitle())
+                            .quantity(Math.toIntExact(item.getQuantity()))
+                            .price(book.getPrice().intValue())
+                            .length(1)
+                            .width(19)
+                            .height(10)
+                            .weight(200)
+                            .category(DeliveryRequest.Category.builder()
+                                    .level1(book.getTitle())
+                                    .build())
+                            .build();
+                }).toList())
+                .build();
+
+        String trackingCode = deliveryPartnerService.createOrder(deliveryRequest);
+        if (nonNull(deliveryDetails)) {
+            deliveryDetails.setTrackingCode(trackingCode);
+            deliveryDetailRepository.save(deliveryDetails);
+            log.info("Update tracking code success");
+        }
+
+        log.info("End create shipping");
     }
 
     @Override
@@ -260,19 +452,318 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize()).withSort(sortBy);
 
         Page<OrderDetails> orders = switch (userType) {
-            case CUSTOMER -> orderDetailsRepository.findAllByUserId(id, pageable);
+            case CUSTOMER -> orderDetailsRepository.findAllByUserId(currentAccount.getUserId(), pageable);
             case SELLER -> orderDetailsRepository.findAllBySellerId(id, pageable);
             default -> new PageImpl<>(List.of());
         };
         log.info("Got {} orders.", orders.getTotalElements());
-        List<OrderResponse> orderResponses = orders.stream().map(order -> modelMapper.map(order, OrderResponse.class)).toList();
+        List<PaymentDetails> payments = paymentRepository.findAllByOrderIdIn(orders.getContent().stream().map(OrderDetails::getId).toList());
+        Map<Long, PaymentDetails> paymentMap = payments.stream().collect(toMap(PaymentDetails::getOrderId, Function.identity()));
+        List<OrderResponse> orderResponses = orders.getContent().stream().map(order -> {
+            PaymentDetails payment = paymentMap.get(order.getId());
+            return OrderResponse.builder()
+                    .orderId(String.valueOf(order.getId()))
+                    .total(order.getTotal())
+                    .paymentAmount(nonNull(payment) ? payment.getAmount() : null)
+                    .paymentId(String.valueOf(nonNull(payment) ? payment.getId() : null))
+                    .paymentStatusDesc(nonNull(payment) ? payment.getStatus().name() : null)
+                    .paymentStatus(nonNull(payment) ? payment.getStatus() : null)
+                    .paymentProvider(nonNull(payment) ? payment.getProvider().name() : null)
+                    .paymentProviderDesc(nonNull(payment) ? payment.getProvider().name() : null)
+                    .status(order.getStatus())
+                    .userId(String.valueOf(order.getUserId()))
+                    .sellerId(String.valueOf(order.getSellerId()))
+                    .createdAt(dateTimeFormatter.format(order.getCreatedAt()))
+                    .updatedAt(dateTimeFormatter.format(order.getUpdatedAt()))
+                    .createdBy(order.getCreatedBy())
+                    .build();
+        }).toList();
         log.info("End get orders success");
-        return PageDto.<OrderResponse>builder().content(orderResponses)
+        return PageDto.<OrderResponse>builder()
+                .content(orderResponses)
                 .totalElements(orders.getTotalElements())
                 .totalPages(orders.getTotalPages())
                 .page(orders.getNumber())
                 .size(orders.getSize())
                 .build();
+    }
+
+    @Override
+    public void cancelOrder(Long orderId, OrderCancelRequest request) {
+        log.info("Start cancel order with id {}", orderId);
+        OrderDetails order = checkExistOrder(orderId);
+        if (order.getStatus() != OrderStatus.PENDING) {
+            log.info("Order status is not pending, throw exception");
+            throw new BusinessException(ResponseCode.ORDER_STATUS_NOT_PENDING);
+        }
+        order.setStatus(OrderStatus.CANCELLED);
+        orderDetailsRepository.save(order);
+        //Todo save history or notification
+        log.info("End cancel order success");
+
+    }
+
+    @Override
+    public List<OrderStatisticResponse> statisticOrder(LocalDateTime from, LocalDateTime to, OrderStatisticType type) {
+        log.info("Start statistic order by type {}", type);
+        List<OrderStatisticResponse> responses = new ArrayList<>();
+        switch (type) {
+            case MONTH -> {
+                LocalDateTime now = LocalDateTime.now();
+                if (isNull(from)) {
+                    from = now.minusMonths(1);
+                }
+                if (isNull(to)) {
+                    to = now;
+                }
+
+                List<StatOderTypeProjection> months = orderDetailsRepository.statisticOrderMonth(from, to);
+                //map for each week of month , if not exist set total order is 0
+
+                Map<LocalDateTime, Long> weekMap = months.stream().collect(toMap(month -> month.getTime()
+                        .withHour(0)
+                        .withMinute(0).withSecond(0), StatOderTypeProjection::getTotalOrder));
+                log.info("Week map {}", weekMap);
+
+                //month length of month from to
+                int weekLength = now.getDayOfMonth() / 7 + 1;
+//                for (int i = 1; i <= weekLength; i++) {
+//                    LocalDateTime time = LocalDateTime.of(now.getYear(), now.getMonth(), i * 7, 0, 0);
+//                    Long totalOrder = weekMap.get(time);
+//                    if (isNull(totalOrder)) {
+//                        totalOrder = 0L;
+//                    }
+//                    responses.add(OrderStatisticResponse.builder()
+//                            .time(time)
+//                            .totalOrder(totalOrder)
+//                            .build());
+//                }
+                for (StatOderTypeProjection month : months) {
+                    responses.add(OrderStatisticResponse.builder()
+                            .time(month.getTime())
+                            .totalOrder(month.getTotalOrder())
+                            .build());
+                }
+            }
+            case QUARTER -> {
+                LocalDateTime now = LocalDateTime.now();
+                if (isNull(from)) {
+                    from = now.minusMonths(3);
+                }
+                if (isNull(to)) {
+                    to = now;
+                }
+
+                List<StatOderTypeProjection> days = orderDetailsRepository.statisticOrderQuater(from, to);
+                //Map local date time to total order , key is local date time with start week
+                Map<LocalDateTime, Long> monthMap = days.stream().collect(toMap(day -> day.getTime()
+                        .withHour(0)
+                        .withMinute(0).withSecond(0), StatOderTypeProjection::getTotalOrder));
+                //moth length of quarter from to
+                int monthLength = now.getMonthValue() - from.getMonthValue() + 1;
+                for (int i = 1; i <= monthLength; i++) {
+                    LocalDateTime time = LocalDateTime.of(now.getYear(), now.getMonth(), i, 0, 0);
+                    Long totalOrder = monthMap.get(time);
+                    if (isNull(totalOrder)) {
+                        totalOrder = 0L;
+                    }
+                    responses.add(OrderStatisticResponse.builder()
+                            .time(time)
+                            .totalOrder(totalOrder)
+                            .build());
+                }
+
+            }
+            case YEAR -> {
+                LocalDateTime now = LocalDateTime.now();
+                if (isNull(from)) {
+                    from = now.minusYears(1);
+                }
+                if (isNull(to)) {
+                    to = now;
+                }
+
+                List<StatOderTypeProjection> years = orderDetailsRepository.statisticOrderYear(from, to);
+                //ap for each month of year , if not exist set total order is 0
+                Map<LocalDateTime, Long> yearMap = years.stream().collect(toMap(year -> year.getTime()
+                        .withHour(0)
+                        .withMinute(0).withSecond(0), StatOderTypeProjection::getTotalOrder));
+                int monthLength = now.getMonthValue();
+                for (int i = 1; i <= monthLength; i++) {
+                    LocalDateTime time = LocalDateTime.of(now.getYear(), i, 1, 0, 0);
+                    Long totalOrder = yearMap.get(time);
+                    if (isNull(totalOrder)) {
+                        totalOrder = 0L;
+                    }
+                    responses.add(OrderStatisticResponse.builder()
+                            .time(time)
+                            .totalOrder(totalOrder)
+                            .build());
+                }
+            }
+            case WEEK -> {
+
+                LocalDateTime now = LocalDateTime.now();
+                if (isNull(from)) {
+                    from = now.minusWeeks(1);
+                }
+                if (isNull(to)) {
+                    to = now;
+                }
+
+                List<StatOderTypeProjection> weeks = orderDetailsRepository.statisticOrderWeek(from, to);
+                //map for each day of week , if not exist set total order is 0
+                Map<LocalDateTime, Long> weekMap = weeks.stream().collect(toMap(week -> week.getTime()
+                        .withHour(0)
+                        .withMinute(0).withSecond(0), StatOderTypeProjection::getTotalOrder));
+                int dayLength = now.getDayOfMonth();
+                for (int i = 1; i <= dayLength; i++) {
+                    LocalDateTime time = LocalDateTime.of(now.getYear(), now.getMonth(), i, 0, 0);
+                    Long totalOrder = weekMap.get(time);
+                    if (isNull(totalOrder)) {
+                        totalOrder = 0L;
+                    }
+                    responses.add(OrderStatisticResponse.builder()
+                            .time(time)
+                            .totalOrder(totalOrder)
+                            .build());
+                }
+
+            }
+            default -> {
+                LocalDateTime now = LocalDateTime.now();
+                if (isNull(from)) {
+                    from = now.minusDays(1);
+                }
+                if (isNull(to)) {
+                    to = now;
+                }
+
+                List<StatOderTypeProjection> days = orderDetailsRepository.statisticOrderDay(from, to);
+
+                //map for earch hour of day , if not exist set total order is 0
+                Map<LocalDateTime, Long> dayMap = days.stream().collect(toMap(day -> day.getTime()
+                        .withMinute(0).withSecond(0), StatOderTypeProjection::getTotalOrder));
+                int hourLength = from.getDayOfMonth() == to.getDayOfMonth() ? now.getHour() : 24;
+                for (int i = 0; i <= hourLength; i++) {
+                    LocalDateTime time = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), i, 0);
+                    Long totalOrder = dayMap.get(time);
+                    if (isNull(totalOrder)) {
+                        totalOrder = 0L;
+                    }
+                    responses.add(OrderStatisticResponse.builder()
+                            .time(time)
+                            .totalOrder(totalOrder)
+                            .build());
+                }
+            }
+        }
+        log.info("End statistic order by type {}", type);
+        return responses;
+    }
+
+    @Override
+    public List<RevenueStatisticResponse> statisticRevenue(LocalDateTime from, LocalDateTime to, OrderStatisticType type) {
+        log.info("Start statistic order by type {}", type);
+        List<RevenueStatisticResponse> responses = new ArrayList<>();
+        switch (type) {
+            case MONTH -> {
+                LocalDateTime now = LocalDateTime.now();
+                if (isNull(from)) {
+                    from = now.minusMonths(1);
+                }
+                if (isNull(to)) {
+                    to = now;
+                }
+
+                List<StatRevenueProjection> months = orderDetailsRepository.statisticRevenueMonth(from, to);
+                for (StatRevenueProjection month : months) {
+                    responses.add(RevenueStatisticResponse.builder()
+                            .time(month.getTime())
+                            .totalAmount(month.getTotalAmount())
+                            .build());
+                }
+            }
+            case QUARTER -> {
+                LocalDateTime now = LocalDateTime.now();
+                if (isNull(from)) {
+                    from = now.minusMonths(3);
+                }
+                if (isNull(to)) {
+                    to = now;
+                }
+
+                List<StatRevenueProjection> days = orderDetailsRepository.statisticRevenueQuater(from, to);
+                for (StatRevenueProjection month : days) {
+                    responses.add(RevenueStatisticResponse.builder()
+                            .time(month.getTime())
+                            .totalAmount(month.getTotalAmount())
+                            .build());
+                }
+            }
+            case YEAR -> {
+                LocalDateTime now = LocalDateTime.now();
+                if (isNull(from)) {
+                    from = now.minusYears(1);
+                }
+                if (isNull(to)) {
+                    to = now;
+                }
+
+                List<StatRevenueProjection> years = orderDetailsRepository.statisticRevenueYear(from, to);
+                for (StatRevenueProjection year : years) {
+                    responses.add(RevenueStatisticResponse.builder()
+                            .time(year.getTime())
+                            .totalAmount(year.getTotalAmount())
+                            .build());
+                }
+            }
+            case WEEK -> {
+
+                LocalDateTime now = LocalDateTime.now();
+                if (isNull(from)) {
+                    from = now.minusWeeks(1);
+                }
+                if (isNull(to)) {
+                    to = now;
+                }
+
+                List<StatRevenueProjection> weeks = orderDetailsRepository.statisticRevenueWeek(from, to);
+                for (StatRevenueProjection week : weeks) {
+                    responses.add(RevenueStatisticResponse.builder()
+                            .time(week.getTime())
+                            .totalAmount(week.getTotalAmount())
+                            .build());
+                }
+            }
+            default -> {
+                LocalDateTime now = LocalDateTime.now();
+                if (isNull(from)) {
+                    from = now.minusDays(1);
+                }
+                if (isNull(to)) {
+                    to = now;
+                }
+
+                List<StatRevenueProjection> days = orderDetailsRepository.statisticRevenueOrderDay(from, to);
+                for (StatRevenueProjection month : days) {
+                    responses.add(RevenueStatisticResponse.builder()
+                            .time(month.getTime())
+                            .totalAmount(month.getTotalAmount())
+                            .build());
+                }
+            }
+        }
+        log.info("End statistic order by type {}", type);
+        return responses;
+    }
+
+    @Override
+    public OrderCallbackRequest callback(OrderCallbackRequest request) {
+        log.info("Start callback order");
+
+        log.info("Request {}", request);
+        return request;
     }
 
 

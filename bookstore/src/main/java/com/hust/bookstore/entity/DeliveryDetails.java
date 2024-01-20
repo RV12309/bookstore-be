@@ -25,7 +25,7 @@ public class DeliveryDetails extends BaseEntity {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(name = "order_id")
+    @Column(name = "payment_id")
     private Long paymentId;
 
     @Column(name="provider")
@@ -38,6 +38,30 @@ public class DeliveryDetails extends BaseEntity {
 
     @Column(name = "tracking_code")
     private String trackingCode;
+
+    @Column(name = "order_id")
+    private Long orderId;
+
+    @Column(name = "province_id")
+    private Long provinceId;
+    @Column(name = "district_id")
+    private Long districtId;
+
+    @Column(name = "ward_code")
+    private Long wardCode;
+
+    @Column(name = "province")
+    private String province;
+
+    @Column(name = "district")
+    private String district;
+
+    @Column(name = "ward")
+    private String ward;
+
+    @Column(name = "first_address")
+    private String firstAddress;
+
 
     @PrePersist
     public void setId() {

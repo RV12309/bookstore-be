@@ -51,7 +51,13 @@ public enum ResponseCode {
     PAYMENT_NOT_FOUND("PAY-001", "Không tìm thấy thông tin thanh toán"),
     GET_SHIPPING_SERVICE_FAILED("SHI-001", "Lấy thông tin dịch vụ vận chuyển thất bại"),
     INVALID_REFRESH_TOKEN("REF-001", "Refresh token không hợp lệ"),
-    GET_SHIPPING_FEE_FAILED("SHI-002", "Lấy thông tin phí vận chuyển thất bại");
+    GET_SHIPPING_FEE_FAILED("SHI-002", "Lấy thông tin phí vận chuyển thất bại"),
+    ORDER_STATUS_NOT_PENDING("ORD-002", "Đơn hàng không ở trạng thái chờ xử lý"),
+    CREATE_ORDER_FAILED("ORD-003",
+            "Tạo đơn hàng thất bại trên hệ thống của nhà cung cấp vận chuyển. Vui lòng thử lại sau"),
+
+    ORDER_ITEM_NOT_FOUND("ORD-004", "Không tìm thấy sản phẩm trong đơn hàng"),
+    DELIVERY_NOT_FOUND("DEL-008", "Không tìm thấy thông tin vận chuyển");
 
     private final String code;
     private final String message;

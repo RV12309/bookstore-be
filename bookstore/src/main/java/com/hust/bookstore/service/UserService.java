@@ -1,5 +1,6 @@
 package com.hust.bookstore.service;
 
+import com.hust.bookstore.dto.PageDto;
 import com.hust.bookstore.dto.request.*;
 import com.hust.bookstore.dto.response.BaseResponse;
 import com.hust.bookstore.dto.response.UserAddressResponse;
@@ -27,7 +28,7 @@ public interface UserService {
 
     UserStatisticResponse statisticUser();
 
-    Page<UserResponse> searchUsers(SearchUserRequest request);
+    PageDto<UserResponse> searchUsers(SearchUserRequest request);
 
     void lockUser(Long id);
 

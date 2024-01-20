@@ -36,6 +36,7 @@ public class BusinessHelper {
     protected final ModelMapper modelMapper;
     protected final NotificationService notificationService;
     protected final UserAddressRepository addressRepository;
+    protected final DeliveryDetailRepository deliveryDetailRepository;
 
 
     public BusinessHelper(BookRepository bookRepository, CartRepository cartRepository, CartItemRepository cartItemRepository,
@@ -44,7 +45,7 @@ public class BusinessHelper {
                           OrderDetailRepository orderDetailsRepository, OrderItemsRepository orderItemsRepository,
                           CategoryRepository categoryRepository, BookCategoryRepository bookCategoryRepository,
                           AccountRepository accountRepository, AuthService authService, BookImageRepository bookImageRepository,
-                          ModelMapper modelMapper, NotificationService notificationService, UserAddressRepository addressRepository) {
+                          ModelMapper modelMapper, NotificationService notificationService, UserAddressRepository addressRepository, DeliveryDetailRepository deliveryDetailRepository) {
         this.bookRepository = bookRepository;
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
@@ -62,6 +63,7 @@ public class BusinessHelper {
         this.modelMapper = modelMapper;
         this.notificationService = notificationService;
         this.addressRepository = addressRepository;
+        this.deliveryDetailRepository = deliveryDetailRepository;
     }
 
     protected Book checkExistBook(Long bookId) {

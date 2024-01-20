@@ -24,5 +24,16 @@ public class OrderResponse {
     BigDecimal paymentAmount;
     OrderStatus status;
     List<OrderItemDto> items;
+    String userId;
+    String sellerId;
+    String createdAt;
+    String updatedAt;
+    String createdBy;
+    String trackingCode;
+    String urlTracking;
+    String fromAddress;
+    String toAddress;
+    String senderName;
+    String buyerName;
 
 }

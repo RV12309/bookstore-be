@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.hust.bookstore.common.Utils.generateIsbn;
 
@@ -42,12 +41,12 @@ public class BooksServiceImpl extends BusinessHelper implements BooksService {
                             CategoryRepository categoryRepository, BookCategoryRepository bookCategoryRepository,
                             AccountRepository accountRepository, AuthService authService, BookImageRepository bookImageRepository,
                             ModelMapper modelMapper, NotificationService notificationService,
-                            UserAddressRepository addressRepository) {
+                            UserAddressRepository addressRepository, DeliveryDetailRepository deliveryDetailRepository) {
         super(bookRepository, cartRepository, cartItemRepository, paymentRepository,
                 deliveryPartnerConfigRepo, storeDeliveryPartnerRepo, userRepository,
                 orderDetailsRepository, orderItemsRepository, categoryRepository,
                 bookCategoryRepository, accountRepository, authService, bookImageRepository, modelMapper,
-                notificationService, addressRepository);
+                notificationService, addressRepository, deliveryDetailRepository);
     }
 
     @Override
@@ -103,12 +102,12 @@ public class BooksServiceImpl extends BusinessHelper implements BooksService {
     }
 
     @Override
-    public BookResponse updateBook(UpdateBookRequest request) {
-        log.info("Updating book {}.", request.getId());
-        Book book = bookRepository.getReferenceById(request.getId());
+    public BookResponse updateBook(UpdateBookRequest request, Long id) {
+        log.info("Updating book {}.", id);
+        Book book = checkExistBook(id);
         modelMapper.map(request, book);
         bookRepository.save(book);
-        log.info("Updated book {}.", request.getId());
+        log.info("Updated book {}.", id);
         return modelMapper.map(book, BookResponse.class);
     }
 
@@ -188,8 +187,8 @@ public class BooksServiceImpl extends BusinessHelper implements BooksService {
 
         List<BookCategories> bookCategories
                 = bookCategoryRepository.findAllByBookIdIn(content.stream().map(Book::getId).toList());
-       List<Category> categories = categoryRepository.findAllById(bookCategories.stream().map(BookCategories::getCategoryId).toList());
-         Map<Long, List<Category>> categoryMap = new HashMap<>();
+        List<Category> categories = categoryRepository.findAllById(bookCategories.stream().map(BookCategories::getCategoryId).toList());
+        Map<Long, List<Category>> categoryMap = new HashMap<>();
         if (non(CollectionUtils.isEmpty(categories))) {
             for (Category category : categories) {
                 if (category != null && category.getId() != null) {
@@ -207,7 +206,7 @@ public class BooksServiceImpl extends BusinessHelper implements BooksService {
             bookResponse.setSellerId(String.valueOf(book.getAccountId()));
             if (accountMap.containsKey(book.getAccountId()))
                 bookResponse.setSellerName(accountMap.get(book.getAccountId()));
-            if (categoryMap.containsKey(book.getId())){
+            if (categoryMap.containsKey(book.getId())) {
                 List<Category> categoryList = categoryMap.get(book.getId());
                 List<CategoryResponse> categoryResponses = categoryList.stream()
                         .map(category -> modelMapper.map(category, CategoryResponse.class)).toList();

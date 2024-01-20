@@ -1,6 +1,7 @@
 package com.hust.bookstore.service.impl;
 
 import com.hust.bookstore.common.Utils;
+import com.hust.bookstore.dto.PageDto;
 import com.hust.bookstore.dto.request.*;
 import com.hust.bookstore.dto.response.BaseResponse;
 import com.hust.bookstore.dto.response.UserAddressResponse;
@@ -14,6 +15,7 @@ import com.hust.bookstore.enumration.UserType;
 import com.hust.bookstore.exception.BusinessException;
 import com.hust.bookstore.helper.BusinessHelper;
 import com.hust.bookstore.repository.*;
+import com.hust.bookstore.repository.projection.StatUserProjection;
 import com.hust.bookstore.service.AuthService;
 import com.hust.bookstore.service.NotificationService;
 import com.hust.bookstore.service.UserService;
@@ -35,6 +37,7 @@ import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,11 +69,12 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
                            CategoryRepository categoryRepository, BookCategoryRepository bookCategoryRepository,
                            AccountRepository accountRepository, AuthService authService, BookImageRepository bookImageRepository,
                            ModelMapper modelMapper, NotificationService notificationService,
-                           UserAddressRepository addressRepository) {
+                           UserAddressRepository addressRepository, DeliveryDetailRepository deliveryDetailRepository) {
         super(bookRepository, cartRepository, cartItemRepository, paymentRepository,
                 deliveryPartnerConfigRepo, storeDeliveryPartnerRepo, userRepository,
                 orderDetailsRepository, orderItemsRepository, categoryRepository,
-                bookCategoryRepository, accountRepository, authService, bookImageRepository, modelMapper, notificationService, addressRepository);
+                bookCategoryRepository, accountRepository, authService, bookImageRepository, modelMapper,
+                notificationService, addressRepository, deliveryDetailRepository);
     }
 
     @Override
@@ -135,6 +139,7 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
         log.info("Found user with id: {}", id);
         modelMapper.map(request, user);
         user.setAccountId(currentAccount.getId());
+        user.setType(currentAccount.getType());
         userRepository.save(user);
         currentAccount.setUserId(user.getId());
         accountRepository.save(currentAccount);
@@ -218,38 +223,67 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
     public UserStatisticResponse statisticUser() {
         log.info("Statistic user");
         //find user group by type
-        Map<UserType, Long> userStatistic = userRepository.statisticUser();
-        //remove admin
-        userStatistic.remove(UserType.ADMIN);
+        List<StatUserProjection> userStatistic = userRepository.statisticUser();
+        Map<UserType, Long> userStatisticMap =
+                userStatistic.stream().collect(HashMap::new, (m, v) -> m.put(v.getType(), v.getCount()), HashMap::putAll);
         //calculate total user
-        Long totalUser = userStatistic.values().stream().reduce(0L, Long::sum);
+        Long totalUser = userStatistic.stream().mapToLong(StatUserProjection::getCount).sum();
+        Map<UserType, Long> mapRes = new HashMap<>();
+        //make map order by type
+        mapRes.put(UserType.SELLER, userStatisticMap.getOrDefault(UserType.SELLER, 0L));
+        mapRes.put(UserType.CUSTOMER, userStatisticMap.getOrDefault(UserType.CUSTOMER, 0L));
+        mapRes.put(UserType.GUEST, userStatisticMap.getOrDefault(UserType.GUEST, 0L));
         log.info("Statistic user successfully");
         return UserStatisticResponse.builder()
                 .totalUser(totalUser)
-                .userStatistic(userStatistic)
+                .userStatistic(mapRes)
                 .build();
     }
 
     @Override
-    public Page<UserResponse> searchUsers(SearchUserRequest request) {
-        log.info("Search user");
+    public PageDto<UserResponse> searchUsers(SearchUserRequest request) {
+        log.info("Search user with request: {}", request);
         List<String> sort = request.getSort();
         if (CollectionUtils.isEmpty(sort)) {
             sort = List.of("id");
         }
         Sort sortBy = Sort.by(sort.stream().map(Sort.Order::by).toList());
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize()).withSort(sortBy);
-        String username = StringUtils.isBlank(request.getUsername()) ? "%" : "%" + request.getUsername() + "%";
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        String name = StringUtils.isBlank(request.getUsername()) ? "%" : "%" + request.getUsername() + "%";
         String email = StringUtils.isBlank(request.getEmail()) ? "%" : "%" + request.getEmail() + "%";
         String phone = StringUtils.isBlank(request.getPhone()) ? "%" : "%" + request.getPhone() + "%";
-        request.setUsername(username);
-        request.setEmail(email);
-        request.setPhone(phone);
-        Page<User> users = userRepository.searchUsers(request, pageable);
+        UserType type = isNull(request.getType()) ? null : request.getType();
+        List<UserType> types = new ArrayList<>();
+        if (nonNull(type) && type.equals(UserType.CUSTOMER)) {
+            types.addAll(List.of(UserType.CUSTOMER, UserType.GUEST));
+        } else if (nonNull(type)) {
+            types.add(type);
+        }
+        Page<User> users = userRepository.searchUsers(types, pageable);
         log.info("Found {} users", users.getTotalElements());
         log.info("Search user successfully");
+        Map<Long, String> userMap = new HashMap<>();
+        if (!CollectionUtils.isEmpty(users.getContent())) {
+            List<Long> userIds = users.getContent().stream().map(User::getId).toList();
+            List<Account> accounts = accountRepository.findAllByUserIdIn(userIds);
+            userMap = accounts.stream().collect(HashMap::new, (m, v) -> m.put(v.getUserId(), v.getUsername()), HashMap::putAll);
+        }
+        Map<Long, String> finalUserMap = userMap;
+        List<UserResponse> userResponses = users.getContent().stream().map(user -> {
+            UserResponse userResponse = modelMapper.map(user, UserResponse.class);
+            userResponse.setUsername(finalUserMap.get(user.getId()));
+            userResponse.setTypeName(user.getType().getName());
+            userResponse.setCreatedAt(user.getCreatedAt().format(Utils.formatter));
+            return userResponse;
+        }).toList();
+        return PageDto.<UserResponse>builder()
+                .content(userResponses)
+                .totalElements(users.getTotalElements())
+                .totalPages(users.getTotalPages())
+                .page(users.getNumber())
+                .size(users.getSize())
+                .build();
 
-        return users.map(user -> modelMapper.map(user, UserResponse.class));
     }
 
     @Override

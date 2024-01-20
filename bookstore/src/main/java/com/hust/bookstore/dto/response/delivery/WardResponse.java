@@ -11,7 +11,7 @@ public class WardResponse {
 
     @JsonAlias({"WardCode"})
     @JsonProperty("wardCode")
-    private int wardCode;
+    private String wardCode;
 
     @JsonAlias({"WardName"})
     @JsonProperty("wardName")

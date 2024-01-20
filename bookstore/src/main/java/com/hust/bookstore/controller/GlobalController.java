@@ -126,6 +126,13 @@ public class GlobalController {
                 .message(ResponseCode.SUCCESS.message()).data(ordersService.getOrder(orderId)).build());
     }
 
+    @Operation(summary = "Callback khi đơn hàng được tạo thành công")
+    @PostMapping("/orders/callback")
+    public ResponseEntity<BaseResponse<OrderCallbackRequest>> callback(@RequestBody OrderCallbackRequest request) {
+        return ResponseEntity.ok(BaseResponse.<OrderCallbackRequest>builder().code(ResponseCode.SUCCESS.code())
+                .message(ResponseCode.SUCCESS.message()).data(ordersService.callback(request)).build());
+    }
+
 
     @Operation(summary = "Lấy thông tin dich vụ vận chuyển")
     @PostMapping("/shipping-services")

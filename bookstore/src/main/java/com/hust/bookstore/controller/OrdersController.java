@@ -1,11 +1,16 @@
 package com.hust.bookstore.controller;
 
 import com.hust.bookstore.dto.PageDto;
+import com.hust.bookstore.dto.request.OrderCancelRequest;
 import com.hust.bookstore.dto.request.OrderStatusRequest;
 import com.hust.bookstore.dto.request.PaymentStatusRequest;
 import com.hust.bookstore.dto.request.SearchOrderRequest;
 import com.hust.bookstore.dto.response.BaseResponse;
 import com.hust.bookstore.dto.response.OrderResponse;
+import com.hust.bookstore.dto.response.OrderStatisticResponse;
+import com.hust.bookstore.dto.response.RevenueStatisticResponse;
+import com.hust.bookstore.enumration.OrderStatisticType;
+import com.hust.bookstore.enumration.OrderStatus;
 import com.hust.bookstore.enumration.ResponseCode;
 import com.hust.bookstore.service.OrdersService;
 import com.hust.bookstore.service.UserService;
@@ -13,6 +18,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1/orders")
@@ -27,7 +35,7 @@ public class OrdersController {
 
     @Operation(summary = "Cập nhật trạng thái đơn hàng, dành cho seller")
     @PatchMapping("/{orderId}/status")
-    public ResponseEntity<BaseResponse<Object>> updateStatus(@PathVariable Long orderId, @RequestBody OrderStatusRequest request) {
+    public ResponseEntity<BaseResponse<Object>> updateStatus(@PathVariable Long orderId, @Valid @RequestBody OrderStatusRequest request) {
         ordersService.updateStatus(orderId, request);
         return ResponseEntity.ok(BaseResponse.builder().code(ResponseCode.SUCCESS.code())
                 .message(ResponseCode.SUCCESS.message()).build());
@@ -54,5 +62,41 @@ public class OrdersController {
         return ResponseEntity.ok(BaseResponse.<PageDto<OrderResponse>>builder().code(ResponseCode.SUCCESS.code())
                 .message(ResponseCode.SUCCESS.message()).data(ordersService.getOrders(request)).build());
     }
+
+    @Operation(summary = "Hủy đơn hàng")
+    @PutMapping("/{orderId}/cancel")
+    public ResponseEntity<BaseResponse<Object>> cancelOrder(@Valid @PathVariable Long orderId, @Valid @RequestBody OrderCancelRequest request) {
+        ordersService.cancelOrder(orderId, request);
+        return ResponseEntity.ok(BaseResponse.builder().code(ResponseCode.SUCCESS.code())
+                .message(ResponseCode.SUCCESS.message()).build());
+    }
+
+    @Operation(summary = "Xác nhận đơn hàng")
+    @PutMapping("/{orderId}/confirm")
+    public ResponseEntity<BaseResponse<Object>> confirmOrder(@Valid @PathVariable Long orderId) {
+        ordersService.updateStatus(orderId, OrderStatusRequest.builder().status(OrderStatus.PROCESSING).build());
+        return ResponseEntity.ok(BaseResponse.builder().code(ResponseCode.SUCCESS.code())
+                .message(ResponseCode.SUCCESS.message()).build());
+    }
+
+
+    @Operation(summary = "Thống kê đơn hàng theo tháng")
+    @GetMapping("/statistic")
+    public ResponseEntity<BaseResponse<List<OrderStatisticResponse>>> statisticOrder(@RequestParam(required = false) LocalDateTime from,
+                                                                                     @RequestParam(required = false) LocalDateTime to,
+                                                                                     @RequestParam OrderStatisticType type) {
+        return ResponseEntity.ok(BaseResponse.<List<OrderStatisticResponse>>builder().code(ResponseCode.SUCCESS.code())
+                .message(ResponseCode.SUCCESS.message()).data(ordersService.statisticOrder(from, to, type)).build());
+    }
+
+    @Operation(summary = "Thống kê doanh thu theo tháng")
+    @GetMapping("/statistic-revenue")
+    public ResponseEntity<BaseResponse<List<RevenueStatisticResponse>>> statisticRevenue(@RequestParam(required = false) LocalDateTime from,
+                                                                                         @RequestParam(required = false) LocalDateTime to,
+                                                                                         @Valid @RequestParam OrderStatisticType type) {
+        return ResponseEntity.ok(BaseResponse.<List<RevenueStatisticResponse>>builder().code(ResponseCode.SUCCESS.code())
+                .message(ResponseCode.SUCCESS.message()).data(ordersService.statisticRevenue(from, to, type)).build());
+    }
+
 
 }

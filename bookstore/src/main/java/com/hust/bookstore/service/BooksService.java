@@ -9,7 +9,7 @@ import org.springframework.data.domain.Page;
 
 public interface BooksService {
     BookResponse createBook(BookRequest bookRequest);
-    BookResponse updateBook(UpdateBookRequest bookRequest);
+    BookResponse updateBook(UpdateBookRequest bookRequest, Long id);
     void delete(String isbn);
     BookResponse getDetail(String isbn);
     Page<BookResponse> getAllBooks();

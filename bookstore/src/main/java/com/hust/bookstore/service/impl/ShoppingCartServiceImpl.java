@@ -39,12 +39,13 @@ public class ShoppingCartServiceImpl extends BusinessHelper implements ShoppingC
                                    CategoryRepository categoryRepository, BookCategoryRepository bookCategoryRepository,
                                    AccountRepository accountRepository, AuthService authService,
                                    BookImageRepository bookImageRepository, ModelMapper modelMapper,
-                                   NotificationService notificationService, UserAddressRepository addressRepository) {
+                                   NotificationService notificationService, UserAddressRepository addressRepository,
+                                   DeliveryDetailRepository deliveryDetailRepository) {
         super(bookRepository, cartRepository, cartItemRepository, paymentRepository,
                 deliveryPartnerConfigRepo, storeDeliveryPartnerRepo, userRepository,
                 orderDetailsRepository, orderItemsRepository, categoryRepository,
                 bookCategoryRepository, accountRepository, authService, bookImageRepository,
-                modelMapper, notificationService, addressRepository);
+                modelMapper, notificationService, addressRepository, deliveryDetailRepository);
     }
 
     @Override

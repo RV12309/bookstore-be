@@ -3,6 +3,7 @@ package com.hust.bookstore.service;
 import com.hust.bookstore.dto.request.CalculateShippingFeeRequest;
 import com.hust.bookstore.dto.request.OrderRequest;
 import com.hust.bookstore.dto.request.ShippingServiceRequest;
+import com.hust.bookstore.dto.request.delivery.DeliveryRequest;
 import com.hust.bookstore.dto.request.delivery.GHNShopInfoRequest;
 import com.hust.bookstore.dto.request.delivery.TokenRequest;
 import com.hust.bookstore.dto.response.AvailableShippingServiceResponse;
@@ -23,7 +24,7 @@ public interface DeliveryPartnerService {
 
     void createNewStore(GHNShopInfoRequest shopInfoRequest, User user, Account account);
 
-    PartnerBaseResponse<PartnerAuthResponse> createOrder(OrderRequest orderRequest, Long shopAccountId);
+    String createOrder(DeliveryRequest deliveryRequest);
 
 
     List<DistrictResponse> getDistricts(int provinceId);
@@ -35,4 +36,6 @@ public interface DeliveryPartnerService {
     List<AvailableShippingServiceResponse> getShippingServices(ShippingServiceRequest request);
 
     ShippingFeeResponse getShippingFee(CalculateShippingFeeRequest request);
+
+    void cancelOrder(String trackingCode);
 }
