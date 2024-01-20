@@ -1,0 +1,32 @@
+spring:
+  kafka:
+    bootstrap-servers: kafka:29092
+#    create-topics:
+#      min-insync-replicas: 1
+#      partitions: 1
+#      replicas: 1
+
+  mail:
+    from: eFinBook
+    host: smtp.gmail.com
+    password: fmjswzdcfywowdfe
+    port: 587
+    username: yen.nh0912@gmail.com
+  properties-mail:
+    debug: true
+    smtp-auth: true
+    smtp-starttls-enable: true
+    transport-protocol: smtp
+logging:
+  level:
+    root: INFO
+  pattern:
+    console: "%d{ISO8601} %5p [%X{TRACE_ID}] [%40.40C{1}] [%4L] [%15.15t] - %m%n%exception"
+email:
+  white-list: "dat.tb98it@gmail.com"
+
+kafka-bootstrap-servers: "kafka:29092"
+kafka-topic: "notification-ecommerce"
+kafka-consumer-group-id: "notification-ecommerce"
+server:
+  port: 8090
