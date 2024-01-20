@@ -1,7 +1,10 @@
 package com.hust.bookstore.controller;
 
 import com.hust.bookstore.dto.request.AuthRequest;
-import com.hust.bookstore.serrvice.AuthService;
+import com.hust.bookstore.dto.request.RefreshAccessTokenRequest;
+import com.hust.bookstore.dto.response.BaseResponse;
+import com.hust.bookstore.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+
+import static com.hust.bookstore.enumration.ResponseCode.SUCCESS;
 
 @RestController
 @RequestMapping("/v1/auth")
@@ -22,11 +27,19 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @Operation(summary = "Đăng nhập")
     @PostMapping("/login")
-    ResponseEntity<Map<String, String>> login(@Valid @RequestBody AuthRequest request) {
+    ResponseEntity<BaseResponse<Map<String, String>>> login(@Valid @RequestBody AuthRequest request) {
         log.info("Authenticating user {}.", request.getUsername());
         Map<String, String> userRegistrationResponse = authService.authRequest(request);
         log.info("User authenticated.");
-        return ResponseEntity.ok(userRegistrationResponse);
+        return ResponseEntity.ok(new BaseResponse<>(SUCCESS.code(), SUCCESS.message(), userRegistrationResponse));
+    }
+
+    @Operation(summary = "Refresh token")
+    @PostMapping("/refresh")
+    ResponseEntity<BaseResponse<Map<String, String>>> refreshToken(@Valid @RequestBody RefreshAccessTokenRequest request) {
+        Map<String, String> userRegistrationResponse = authService.refreshToken(request);
+        return ResponseEntity.ok(new BaseResponse<>(SUCCESS.code(), SUCCESS.message(), userRegistrationResponse));
     }
 }

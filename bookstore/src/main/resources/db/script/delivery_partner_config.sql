@@ -1,0 +1,2 @@
+INSERT INTO delivery_partners_config (id,api_url,code,is_deleted,password,provider,token,username) VALUES
+    (1,'https://dev-online-gateway.ghn.vn','2506578',0,NULL,'GHN_EXPRESS','d1064e55-8ae7-11ee-b1d4-92b443b7a897','datviboi@gmail.com');

@@ -1,8 +1,15 @@
 package com.hust.bookstore.entity;
 
+import cn.ipokerface.snowflake.SnowflakeIdGenerator;
 import com.hust.bookstore.enumration.UserType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -10,10 +17,14 @@ import lombok.*;
 @Setter
 @Entity
 @Builder
-@Table(name = "account")
+@Table(name = "account",indexes = {
+        @Index(name = "account_username_index", columnList = "username"),
+        @Index(name = "account_email_index", columnList = "email"),
+        @Index(name = "account_user_id_index", columnList = "user_id")
+})
+@ToString
 public class Account extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
@@ -30,7 +41,42 @@ public class Account extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private UserType type;
 
-    @Column(name = "is_enable")
+    @Column(name = "user_id")
+    private Long userId;
+
+    @Column(name = "is_enabled")
     @Builder.Default
-    private Boolean isEnable = false;
+    private Boolean isEnabled = false;
+
+    @Column(name = "verification_code")
+    private String verificationCode;
+
+    @Column(name = "is_verified")
+    @Builder.Default
+    private Boolean isVerified = false;
+
+    @Column(name = "verification_expired_at")
+    private LocalDateTime verificationExpiredAt;
+
+    @PrePersist
+    public void setId() {
+        SnowflakeIdGenerator idGenerator = new SnowflakeIdGenerator(0, 0);
+        this.id = idGenerator.nextId();
+        this.setIsDeleted(false);
+    }
+
+    @Builder.Default
+    private Boolean isDeleted = false;
+
+    @CreatedBy
+    private String createdBy;
+
+    @LastModifiedBy
+    private String updatedBy;
+
+    @CreatedDate
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 }
