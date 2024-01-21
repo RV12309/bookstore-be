@@ -220,19 +220,33 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
     public UserStatisticResponse statisticUser() {
         log.info("Statistic user");
         //find user group by type
-        List<StatUserProjection> userStatistic = userRepository.statisticUser();
-        log.info("Found {} users", userStatistic.size());
+//        List<StatUserProjection> userStatistic = userRepository.statisticUser();
+//        log.info("Found {} users", userStatistic.size());
         //filter user type
         List<CountUserStatisticResponse>
-                userStatisticRes = new ArrayList<>(userStatistic.stream().map(user -> CountUserStatisticResponse.builder()
-                .type(user.getType())
-                .count(user.getCount())
-                .build()).toList());
+                userStatisticRes = new ArrayList<>();
         log.info("Found {} ", userStatisticRes);
+
+        long countCustomer = userRepository.countAccount(UserType.CUSTOMER);
+        userStatisticRes.add(CountUserStatisticResponse.builder()
+                .type(UserType.CUSTOMER)
+                .count(countCustomer)
+                .build());
+        long countGuest = userRepository.countByType(UserType.GUEST);
+        userStatisticRes.add(CountUserStatisticResponse.builder()
+                .type(UserType.GUEST)
+                .count(countGuest)
+                .build());
+        long countSeller = userRepository.countAccount(UserType.SELLER);
+        userStatisticRes.add(CountUserStatisticResponse.builder()
+                .type(UserType.SELLER)
+                .count(countSeller)
+                .build());
+
         //remove admin
         userStatisticRes.removeIf(user -> user.getType().equals(UserType.ADMIN));
         //calculate total user
-        Long totalUser = userStatistic.stream().mapToLong(StatUserProjection::getCount).sum();
+        Long totalUser = userStatisticRes.stream().mapToLong(CountUserStatisticResponse::getCount).sum();
         log.info("Statistic user successfully");
         return UserStatisticResponse.builder()
                 .totalUser(totalUser)

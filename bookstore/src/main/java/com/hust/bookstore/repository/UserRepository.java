@@ -3,7 +3,6 @@ package com.hust.bookstore.repository;
 import com.hust.bookstore.entity.User;
 import com.hust.bookstore.enumration.UserType;
 import com.hust.bookstore.repository.projection.StatUserProjection;
-import com.hust.bookstore.repository.projection.UserProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,7 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
-    @Query("select u.type as type, count(u) as count from User u group by u.type")
+    @Query("select u.type as type, count(u) as count from User u  where u.type is not null group by u.type")
     List<StatUserProjection> statisticUser();
 
     @Query("select u " +
@@ -38,4 +37,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
             where accountId = :accountId
             """)
     Optional<SellerProjection> findSeller(Long accountId);
+
+    long countByType(UserType userType);
+
+    @Query("""
+            select count(u)
+            from User u
+            inner join Account a on u.accountId = a.id
+            where u.type = :userType
+            """)
+    long countAccount(UserType userType);
 }

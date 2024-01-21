@@ -22,8 +22,8 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetails, Long>
             " SUM(total) AS totalAmount " +
             "FROM order_details " +
             "WHERE created_at BETWEEN :startDate AND :endDate " +
-            "GROUP BY week_number " +
-            "ORDER BY week_number", nativeQuery = true)
+            "GROUP BY time " +
+            "ORDER BY time", nativeQuery = true)
     List<StatOderProjection> statisticOrderMonth(LocalDateTime startDate, LocalDateTime endDate);
 
     @Query(value = "SELECT DATE_FORMAT(created_at, '%Y-%m') AS time, " +
