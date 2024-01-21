@@ -38,7 +38,7 @@ public class OrderRequest {
     private Long districtId;
 
     @NotNull(message = "Ward code cannot be null.")
-    private Long wardCode;
+    private String wardCode;
 
     @NotBlank(message = "Province cannot be blank.")
     private String province;

@@ -7,7 +7,6 @@ import com.hust.bookstore.dto.response.UserAddressResponse;
 import com.hust.bookstore.dto.response.UserResponse;
 import com.hust.bookstore.dto.response.UserStatisticResponse;
 import com.hust.bookstore.enumration.UserType;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;

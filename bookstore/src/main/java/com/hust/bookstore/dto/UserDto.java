@@ -24,7 +24,7 @@ public class UserDto {
 
     private Long provinceId;
     private Long districtId;
-    private Long wardCode;
+    private String wardCode;
     private String province;
     private String district;
     private String ward;

@@ -46,7 +46,7 @@ public class User {
     private Long districtId;
 
     @Column(name = "ward_code")
-    private Long wardCode;
+    private String wardCode;
 
     @Column(name = "province")
     private String province;
