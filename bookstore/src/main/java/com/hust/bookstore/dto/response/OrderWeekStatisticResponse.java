@@ -9,10 +9,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Builder
 @Getter
-public class OrderStatisticResponse {
+public class OrderWeekStatisticResponse {
     private String time;
     private Long totalOrder;
     private BigDecimal totalAmount;
-
 
 }

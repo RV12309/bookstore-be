@@ -12,6 +12,7 @@ import com.hust.bookstore.enumration.*;
 import com.hust.bookstore.exception.BusinessException;
 import com.hust.bookstore.helper.BusinessHelper;
 import com.hust.bookstore.repository.*;
+import com.hust.bookstore.repository.projection.StatOderProjection;
 import com.hust.bookstore.repository.projection.StatOderTypeProjection;
 import com.hust.bookstore.repository.projection.StatRevenueProjection;
 import com.hust.bookstore.service.AuthService;
@@ -39,6 +40,7 @@ import java.util.function.Function;
 import static com.hust.bookstore.common.Constants.*;
 import static com.hust.bookstore.common.Utils.dateTimeFormatter;
 import static com.hust.bookstore.common.Utils.formatter;
+import static com.hust.bookstore.enumration.OrderStatus.COMPLETED;
 import static com.hust.bookstore.enumration.PaymentStatus.PENDING;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -301,7 +303,7 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                 if (payment.getProvider() != PaymentProvider.COD) {
                     order.setStatus(OrderStatus.PROCESSING);
                 } else {
-                    order.setStatus(OrderStatus.COMPLETED);
+                    order.setStatus(COMPLETED);
                 }
                 break;
             case CANCELLED:
@@ -329,6 +331,16 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
         }
         if (OrderStatus.CANCELLED.equals(request.getStatus())) {
             sendCancelOrderToDelivery(order);
+        }
+        if (COMPLETED.equals(request.getStatus())) {
+            PaymentDetails payment = paymentRepository.findByOrderId(order.getId()).orElse(null);
+            if (payment == null) {
+                log.info("Payment not found");
+                return;
+            }
+            payment.setStatus(PaymentStatus.PAID);
+            paymentRepository.save(payment);
+            log.info("Update payment status success");
         }
         //Todo save history or notification
         log.info("End update order status");
@@ -517,31 +529,13 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     to = now;
                 }
 
-                List<StatOderTypeProjection> months = orderDetailsRepository.statisticOrderMonth(from, to);
-                //map for each week of month , if not exist set total order is 0
+                List<StatOderProjection> months = orderDetailsRepository.statisticOrderMonth(from, to);
 
-                Map<LocalDateTime, Long> weekMap = months.stream().collect(toMap(month -> month.getTime()
-                        .withHour(0)
-                        .withMinute(0).withSecond(0), StatOderTypeProjection::getTotalOrder));
-                log.info("Week map {}", weekMap);
-
-                //month length of month from to
-                int weekLength = now.getDayOfMonth() / 7 + 1;
-//                for (int i = 1; i <= weekLength; i++) {
-//                    LocalDateTime time = LocalDateTime.of(now.getYear(), now.getMonth(), i * 7, 0, 0);
-//                    Long totalOrder = weekMap.get(time);
-//                    if (isNull(totalOrder)) {
-//                        totalOrder = 0L;
-//                    }
-//                    responses.add(OrderStatisticResponse.builder()
-//                            .time(time)
-//                            .totalOrder(totalOrder)
-//                            .build());
-//                }
-                for (StatOderTypeProjection month : months) {
+                for (StatOderProjection month : months) {
                     responses.add(OrderStatisticResponse.builder()
                             .time(month.getTime())
                             .totalOrder(month.getTotalOrder())
+                            .totalAmount(month.getTotalAmount())
                             .build());
                 }
             }
@@ -554,22 +548,13 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     to = now;
                 }
 
-                List<StatOderTypeProjection> days = orderDetailsRepository.statisticOrderQuater(from, to);
+                List<StatOderProjection> days = orderDetailsRepository.statisticOrderQuater(from, to);
                 //Map local date time to total order , key is local date time with start week
-                Map<LocalDateTime, Long> monthMap = days.stream().collect(toMap(day -> day.getTime()
-                        .withHour(0)
-                        .withMinute(0).withSecond(0), StatOderTypeProjection::getTotalOrder));
-                //moth length of quarter from to
-                int monthLength = now.getMonthValue() - from.getMonthValue() + 1;
-                for (int i = 1; i <= monthLength; i++) {
-                    LocalDateTime time = LocalDateTime.of(now.getYear(), now.getMonth(), i, 0, 0);
-                    Long totalOrder = monthMap.get(time);
-                    if (isNull(totalOrder)) {
-                        totalOrder = 0L;
-                    }
+                for (StatOderProjection month : days) {
                     responses.add(OrderStatisticResponse.builder()
-                            .time(time)
-                            .totalOrder(totalOrder)
+                            .time(month.getTime())
+                            .totalOrder(month.getTotalOrder())
+                            .totalAmount(month.getTotalAmount())
                             .build());
                 }
 
@@ -583,21 +568,12 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     to = now;
                 }
 
-                List<StatOderTypeProjection> years = orderDetailsRepository.statisticOrderYear(from, to);
-                //ap for each month of year , if not exist set total order is 0
-                Map<LocalDateTime, Long> yearMap = years.stream().collect(toMap(year -> year.getTime()
-                        .withHour(0)
-                        .withMinute(0).withSecond(0), StatOderTypeProjection::getTotalOrder));
-                int monthLength = now.getMonthValue();
-                for (int i = 1; i <= monthLength; i++) {
-                    LocalDateTime time = LocalDateTime.of(now.getYear(), i, 1, 0, 0);
-                    Long totalOrder = yearMap.get(time);
-                    if (isNull(totalOrder)) {
-                        totalOrder = 0L;
-                    }
+                List<StatOderProjection> years = orderDetailsRepository.statisticOrderYear(from, to);
+                for (StatOderProjection month : years) {
                     responses.add(OrderStatisticResponse.builder()
-                            .time(time)
-                            .totalOrder(totalOrder)
+                            .time(month.getTime())
+                            .totalOrder(month.getTotalOrder())
+                            .totalAmount(month.getTotalAmount())
                             .build());
                 }
             }
@@ -611,21 +587,13 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     to = now;
                 }
 
-                List<StatOderTypeProjection> weeks = orderDetailsRepository.statisticOrderWeek(from, to);
+                List<StatOderProjection> weeks = orderDetailsRepository.statisticOrderWeek(from, to);
                 //map for each day of week , if not exist set total order is 0
-                Map<LocalDateTime, Long> weekMap = weeks.stream().collect(toMap(week -> week.getTime()
-                        .withHour(0)
-                        .withMinute(0).withSecond(0), StatOderTypeProjection::getTotalOrder));
-                int dayLength = now.getDayOfMonth();
-                for (int i = 1; i <= dayLength; i++) {
-                    LocalDateTime time = LocalDateTime.of(now.getYear(), now.getMonth(), i, 0, 0);
-                    Long totalOrder = weekMap.get(time);
-                    if (isNull(totalOrder)) {
-                        totalOrder = 0L;
-                    }
+                for (StatOderProjection month : weeks) {
                     responses.add(OrderStatisticResponse.builder()
-                            .time(time)
-                            .totalOrder(totalOrder)
+                            .time(month.getTime())
+                            .totalOrder(month.getTotalOrder())
+                            .totalAmount(month.getTotalAmount())
                             .build());
                 }
 
@@ -639,21 +607,13 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     to = now;
                 }
 
-                List<StatOderTypeProjection> days = orderDetailsRepository.statisticOrderDay(from, to);
+                List<StatOderProjection> days = orderDetailsRepository.statisticOrderDay(from, to);
 
-                //map for earch hour of day , if not exist set total order is 0
-                Map<LocalDateTime, Long> dayMap = days.stream().collect(toMap(day -> day.getTime()
-                        .withMinute(0).withSecond(0), StatOderTypeProjection::getTotalOrder));
-                int hourLength = from.getDayOfMonth() == to.getDayOfMonth() ? now.getHour() : 24;
-                for (int i = 0; i <= hourLength; i++) {
-                    LocalDateTime time = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), i, 0);
-                    Long totalOrder = dayMap.get(time);
-                    if (isNull(totalOrder)) {
-                        totalOrder = 0L;
-                    }
+                for (StatOderProjection month : days) {
                     responses.add(OrderStatisticResponse.builder()
-                            .time(time)
-                            .totalOrder(totalOrder)
+                            .time(month.getTime())
+                            .totalOrder(month.getTotalOrder())
+                            .totalAmount(month.getTotalAmount())
                             .build());
                 }
             }
