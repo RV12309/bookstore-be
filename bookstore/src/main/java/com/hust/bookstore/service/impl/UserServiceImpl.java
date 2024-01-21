@@ -122,18 +122,19 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
         Account account = authService.getCurrentAccountLogin();
         Account currentAccount = accountRepository.findById(account.getId())
                 .orElseThrow(() -> new BusinessException(ACCOUNT_NOT_FOUND));
-//        if (non(currentAccount.getUserId().equals(id))) {
-//            throw new BusinessException(USER_NOT_MATCH);
-//        }
+        log.info("Found account {}",currentAccount);
         User user;
-        if (nonNull(account.getUserId())) {
-            user = userRepository.findById(id).orElse(new User());
+        if (nonNull(currentAccount.getUserId())) {
+            user = userRepository.findById(currentAccount.getUserId()).orElse(new User());
         } else {
             user = new User();
         }
 
         log.info("Found user with id: {}", id);
         modelMapper.map(request, user);
+        if (nonNull(currentAccount.getUserId())) {
+            user.setId(currentAccount.getUserId());
+        }
         user.setAccountId(currentAccount.getId());
         user.setType(currentAccount.getType());
         userRepository.save(user);

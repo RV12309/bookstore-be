@@ -47,4 +47,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             where u.type = :userType and u.accountId is not null
             """)
     long countAccount(UserType userType);
+
+    Optional<User> findByAccountId(Long id);
 }
