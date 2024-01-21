@@ -49,7 +49,7 @@ services:
   postmaster:
     container_name: postmaster
     build:
-      dockerfile: Dockerfile
+      dockerfile: /postmaster/Dockerfile
     image: postmaster:latest
     ports:
         - "8090:8090"
@@ -60,6 +60,41 @@ services:
         kafka-topic: "notification-ecommerce"
         kafka-consumer-group-id: "notification-ecommerce"
         email.enable-white-list: 'FALSE'
+    networks:
+      - ecommerce
+  ecommerce:
+    container_name: ecommerce
+    build:
+      dockerfile: /bookstore/Dockerfile
+    image: ecommerce:latest
+    ports:
+      - "9000:9000"
+    depends_on:
+      - mysql
+    environment:
+      kafka-bootstrap-servers: "kafka:29092"
+      kafka-topic: "notification-ecommerce"
+      kafka-consumer-group-id: "notification-ecommerce"
+      email.enable-white-list: 'FALSE'
+    networks:
+      - ecommerce
+  mysql:
+    container_name: mysql
+    image: debezium/example-mysql:latest
+    hostname: mysql
+    ports:
+      - "3307:33060"
+    depends_on:
+      - postmaster
+    environment:
+      MYSQL_ROOT_PASSWORD:
+      MYSQL_DATABASE: ecommerce
+      MYSQL_PASSWORD:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    volumes:
+      - ~/db/mysql:/var/lib/mysql
+      - ./config.cnf:/etc/mysql/conf.d/config.cnf
+      - ./init-dump:/docker-entrypoint-initdb.d
     networks:
       - ecommerce
 networks:
