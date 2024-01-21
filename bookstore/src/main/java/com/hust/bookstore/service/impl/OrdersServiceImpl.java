@@ -13,7 +13,6 @@ import com.hust.bookstore.exception.BusinessException;
 import com.hust.bookstore.helper.BusinessHelper;
 import com.hust.bookstore.repository.*;
 import com.hust.bookstore.repository.projection.StatOderProjection;
-import com.hust.bookstore.repository.projection.StatOderTypeProjection;
 import com.hust.bookstore.repository.projection.StatRevenueProjection;
 import com.hust.bookstore.service.AuthService;
 import com.hust.bookstore.service.DeliveryPartnerService;
@@ -464,8 +463,8 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize()).withSort(sortBy);
 
         Page<OrderDetails> orders = switch (userType) {
-            case CUSTOMER -> orderDetailsRepository.findAllByUserId(currentAccount.getUserId(), pageable);
-            case SELLER -> orderDetailsRepository.findAllBySellerId(id, pageable);
+            case CUSTOMER -> orderDetailsRepository.findAllByUserIdOrderByCreatedAtDesc(currentAccount.getUserId(), pageable);
+            case SELLER -> orderDetailsRepository.findAllBySellerIdOrderByCreatedAtDesc(id, pageable);
             default -> new PageImpl<>(List.of());
         };
         log.info("Got {} orders.", orders.getTotalElements());
@@ -519,6 +518,21 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
     public List<OrderStatisticResponse> statisticOrder(LocalDateTime from, LocalDateTime to, OrderStatisticType type) {
         log.info("Start statistic order by type {}", type);
         List<OrderStatisticResponse> responses = new ArrayList<>();
+        Account currentAccount = authService.getCurrentAccountLogin();
+        if (isNull(currentAccount)) {
+            log.info("Current account not found, throw exception");
+            throw new BusinessException(ResponseCode.ACCOUNT_NOT_FOUND);
+        }
+        Account account = accountRepository.findById(currentAccount.getId()).orElse(null);
+        if (isNull(account)) {
+            log.info("Account not found, throw exception");
+            throw new BusinessException(ResponseCode.ACCOUNT_NOT_FOUND);
+        }
+
+        UserType userType = account.getType();
+        Long id = UserType.SELLER.equals(userType) ? account.getId() : null;
+
+
         switch (type) {
             case MONTH -> {
                 LocalDateTime now = LocalDateTime.now();
@@ -529,7 +543,7 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     to = now;
                 }
 
-                List<StatOderProjection> months = orderDetailsRepository.statisticOrderMonth(from, to);
+                List<StatOderProjection> months = orderDetailsRepository.statisticOrderMonth(from, to, id);
 
                 for (StatOderProjection month : months) {
                     responses.add(OrderStatisticResponse.builder()
@@ -548,7 +562,7 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     to = now;
                 }
 
-                List<StatOderProjection> days = orderDetailsRepository.statisticOrderQuater(from, to);
+                List<StatOderProjection> days = orderDetailsRepository.statisticOrderQuater(from, to, id);
                 //Map local date time to total order , key is local date time with start week
                 for (StatOderProjection month : days) {
                     responses.add(OrderStatisticResponse.builder()
@@ -568,7 +582,7 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     to = now;
                 }
 
-                List<StatOderProjection> years = orderDetailsRepository.statisticOrderYear(from, to);
+                List<StatOderProjection> years = orderDetailsRepository.statisticOrderYear(from, to, id);
                 for (StatOderProjection month : years) {
                     responses.add(OrderStatisticResponse.builder()
                             .time(month.getTime())
@@ -587,7 +601,7 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     to = now;
                 }
 
-                List<StatOderProjection> weeks = orderDetailsRepository.statisticOrderWeek(from, to);
+                List<StatOderProjection> weeks = orderDetailsRepository.statisticOrderWeek(from, to, id);
                 //map for each day of week , if not exist set total order is 0
                 for (StatOderProjection month : weeks) {
                     responses.add(OrderStatisticResponse.builder()
@@ -607,7 +621,7 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     to = now;
                 }
 
-                List<StatOderProjection> days = orderDetailsRepository.statisticOrderDay(from, to);
+                List<StatOderProjection> days = orderDetailsRepository.statisticOrderDay(from, to, id);
 
                 for (StatOderProjection month : days) {
                     responses.add(OrderStatisticResponse.builder()

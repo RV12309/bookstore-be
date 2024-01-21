@@ -2,7 +2,6 @@ package com.hust.bookstore.repository;
 
 import com.hust.bookstore.entity.OrderDetails;
 import com.hust.bookstore.repository.projection.StatOderProjection;
-import com.hust.bookstore.repository.projection.StatOderTypeProjection;
 import com.hust.bookstore.repository.projection.StatRevenueProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,54 +12,59 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OrderDetailRepository extends JpaRepository<OrderDetails, Long> {
-    Page<OrderDetails> findAllByUserId(Long id, Pageable pageable);
+    Page<OrderDetails> findAllByUserIdOrderByCreatedAtDesc(Long id, Pageable pageable);
 
-    Page<OrderDetails> findAllBySellerId(Long id, Pageable pageable);
+    Page<OrderDetails> findAllBySellerIdOrderByCreatedAtDesc(Long id, Pageable pageable);
 
     @Query(value = "SELECT YEARWEEK(created_at) AS time, " +
             "COUNT(*) AS totalOrder, " +
             " SUM(total) AS totalAmount " +
             "FROM order_details " +
             "WHERE created_at BETWEEN :startDate AND :endDate " +
+            "AND (seller_id = :id OR :id IS NULL) " +
             "GROUP BY time " +
             "ORDER BY time", nativeQuery = true)
-    List<StatOderProjection> statisticOrderMonth(LocalDateTime startDate, LocalDateTime endDate);
+    List<StatOderProjection> statisticOrderMonth(LocalDateTime startDate, LocalDateTime endDate, Long id);
 
     @Query(value = "SELECT DATE_FORMAT(created_at, '%Y-%m') AS time, " +
             "       COUNT(*) AS totalOrder, " +
             "       SUM(total) AS totalAmount " +
             "FROM order_details " +
             "WHERE created_at BETWEEN :startDate AND :endDate " +
+            "AND (seller_id = :id OR :id IS NULL) " +
             "GROUP BY time " +
             "ORDER BY time", nativeQuery = true)
-    List<StatOderProjection> statisticOrderQuater(LocalDateTime startDate, LocalDateTime endDate);
+    List<StatOderProjection> statisticOrderQuater(LocalDateTime startDate, LocalDateTime endDate, Long id);
 
     @Query(value = "SELECT DATE_FORMAT(created_at, '%Y-%m') AS time, " +
             "COUNT(*) AS totalOrder, " +
             "SUM(total) AS totalAmount " +
             "FROM order_details " +
             "WHERE created_at BETWEEN :startDate AND :endDate " +
+            "AND (seller_id = :id OR :id IS NULL) " +
             "GROUP BY time " +
             "ORDER BY time", nativeQuery = true)
-    List<StatOderProjection> statisticOrderYear(LocalDateTime startDate, LocalDateTime endDate);
+    List<StatOderProjection> statisticOrderYear(LocalDateTime startDate, LocalDateTime endDate, Long id);
 
     @Query(value = "SELECT DATE(created_at) AS time, " +
             "COUNT(*) AS totalOrder, " +
             "SUM(total) AS totalAmount " +
             "FROM order_details " +
             "WHERE created_at BETWEEN :startDate AND :endDate " +
+            "AND (seller_id = :id OR :id IS NULL) " +
             "GROUP BY time " +
             "ORDER BY time", nativeQuery = true)
-    List<StatOderProjection> statisticOrderWeek(LocalDateTime startDate, LocalDateTime endDate);
+    List<StatOderProjection> statisticOrderWeek(LocalDateTime startDate, LocalDateTime endDate, Long id);
 
     @Query(value = "SELECT DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') AS time, " +
             "COUNT(*) AS totalOrder, " +
             "SUM(total) AS totalAmount " +
             "FROM order_details " +
             "WHERE created_at BETWEEN :startDate AND :endDate " +
+            "AND (seller_id = :id OR :id IS NULL) " +
             "GROUP BY time " +
             "ORDER BY time", nativeQuery = true)
-    List<StatOderProjection> statisticOrderDay(LocalDateTime startDate, LocalDateTime endDate);
+    List<StatOderProjection> statisticOrderDay(LocalDateTime startDate, LocalDateTime endDate, Long id);
 
     @Query(value = "select sum(o.total) as totalAmount, " +
             "created_at as time from order_details o " +
