@@ -20,9 +20,21 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("select u " +
             "from User u " +
-            "where "+
-            " (coalesce(:types) is null or u.type in :types) ")
-    Page<User> searchUsers(List<UserType> types, Pageable pageable);
+            "where " +
+            "u.type = 'SELLER'")
+    Page<User> searchUsersSeller(Pageable pageable);
+
+    @Query("select u " +
+            "from User u " +
+            "where " +
+            "u.type is not null")
+    Page<User> searchUsers(Pageable pageable);
+
+    @Query("select u " +
+            "from User u " +
+            "where " +
+            "u.type = 'CUSTOMER' or u.type = 'GUEST' ")
+    Page<User> searchUsersCustomer(Pageable pageable);
 
     @Query("""
             select u.accountId as id, u.name as name
@@ -47,6 +59,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
             where u.type = :userType and u.accountId is not null
             """)
     long countAccount(UserType userType);
-
-    Optional<User> findByAccountId(Long id);
 }

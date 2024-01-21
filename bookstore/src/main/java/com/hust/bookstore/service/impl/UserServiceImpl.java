@@ -122,7 +122,7 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
         Account account = authService.getCurrentAccountLogin();
         Account currentAccount = accountRepository.findById(account.getId())
                 .orElseThrow(() -> new BusinessException(ACCOUNT_NOT_FOUND));
-        log.info("Found account {}",currentAccount);
+        log.info("Found account {}", currentAccount);
         User user;
         if (nonNull(currentAccount.getUserId())) {
             user = userRepository.findById(currentAccount.getUserId()).orElse(new User());
@@ -268,12 +268,17 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
         String phone = StringUtils.isBlank(request.getPhone()) ? "%" : "%" + request.getPhone() + "%";
         UserType type = isNull(request.getType()) ? null : request.getType();
         List<UserType> types = new ArrayList<>();
+        Page<User> users;
         if (nonNull(type) && type.equals(UserType.CUSTOMER)) {
-            types.addAll(List.of(UserType.CUSTOMER, UserType.GUEST));
+//            types.addAll(List.of(UserType.CUSTOMER, UserType.GUEST));
+            users = userRepository.searchUsersCustomer(pageable);
+
         } else if (nonNull(type)) {
-            types.add(type);
+            users = userRepository.searchUsersSeller(pageable);
+        } else {
+            users = userRepository.searchUsers(pageable);
         }
-        Page<User> users = userRepository.searchUsers(types, pageable);
+
         log.info("Found {} users", users.getTotalElements());
         log.info("Search user successfully");
         Map<Long, String> userMap = new HashMap<>();
@@ -287,7 +292,7 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
             UserResponse userResponse = modelMapper.map(user, UserResponse.class);
             userResponse.setUsername(finalUserMap.get(user.getId()));
             userResponse.setTypeName(user.getType().getName());
-            userResponse.setCreatedAt(user.getCreatedAt().format(Utils.formatter));
+            userResponse.setCreatedAt(isNull(user.getCreatedAt()) ? null : user.getCreatedAt().format(Utils.formatter));
             return userResponse;
         }).toList();
         return PageDto.<UserResponse>builder()
