@@ -3,10 +3,7 @@ package com.hust.bookstore.service.impl;
 import com.hust.bookstore.common.Utils;
 import com.hust.bookstore.dto.PageDto;
 import com.hust.bookstore.dto.request.*;
-import com.hust.bookstore.dto.response.BaseResponse;
-import com.hust.bookstore.dto.response.UserAddressResponse;
-import com.hust.bookstore.dto.response.UserResponse;
-import com.hust.bookstore.dto.response.UserStatisticResponse;
+import com.hust.bookstore.dto.response.*;
 import com.hust.bookstore.entity.Account;
 import com.hust.bookstore.entity.User;
 import com.hust.bookstore.entity.UserAddress;
@@ -109,7 +106,7 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
 
     private void sendNotificationEmail(Account account, String verificationCode) {
         log.info("Send notification email to {}", account.getEmail());
-        String verificationUrl = baseUrl + contextPath + verificationEndpoint;
+        String verificationUrl = baseUrl + verificationEndpoint;
         Context context = new Context();
         context.setVariable(USERNAME, account.getUsername());
         context.setVariable(ACTIVE_LINK, verificationUrl);
@@ -224,19 +221,22 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
         log.info("Statistic user");
         //find user group by type
         List<StatUserProjection> userStatistic = userRepository.statisticUser();
-        Map<UserType, Long> userStatisticMap =
-                userStatistic.stream().collect(HashMap::new, (m, v) -> m.put(v.getType(), v.getCount()), HashMap::putAll);
+        log.info("Found {} users", userStatistic.size());
+        //filter user type
+        List<CountUserStatisticResponse>
+                userStatisticRes = new ArrayList<>(userStatistic.stream().map(user -> CountUserStatisticResponse.builder()
+                .type(user.getType())
+                .count(user.getCount())
+                .build()).toList());
+        log.info("Found {} ", userStatisticRes);
+        //remove admin
+        userStatisticRes.removeIf(user -> user.getType().equals(UserType.ADMIN));
         //calculate total user
         Long totalUser = userStatistic.stream().mapToLong(StatUserProjection::getCount).sum();
-        Map<UserType, Long> mapRes = new HashMap<>();
-        //make map order by type
-        mapRes.put(UserType.SELLER, userStatisticMap.getOrDefault(UserType.SELLER, 0L));
-        mapRes.put(UserType.CUSTOMER, userStatisticMap.getOrDefault(UserType.CUSTOMER, 0L));
-        mapRes.put(UserType.GUEST, userStatisticMap.getOrDefault(UserType.GUEST, 0L));
         log.info("Statistic user successfully");
         return UserStatisticResponse.builder()
                 .totalUser(totalUser)
-                .userStatistic(mapRes)
+                .userStatistic(userStatisticRes)
                 .build();
     }
 

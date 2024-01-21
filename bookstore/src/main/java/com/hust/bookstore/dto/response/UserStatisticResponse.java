@@ -1,9 +1,8 @@
 package com.hust.bookstore.dto.response;
 
-import com.hust.bookstore.enumration.UserType;
 import lombok.*;
 
-import java.util.Map;
+import java.util.List;
 
 @Getter
 @Setter
@@ -12,5 +11,5 @@ import java.util.Map;
 @NoArgsConstructor
 public class UserStatisticResponse {
     private Long totalUser;
-    private Map<UserType, Long> userStatistic;
+    private List<CountUserStatisticResponse> userStatistic;
 }
