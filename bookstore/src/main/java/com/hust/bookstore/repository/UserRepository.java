@@ -44,9 +44,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<SellerProjection> findAllByAccountIdIn(List<Long> accountIds);
 
     @Query("""
-            select accountId as id, name as name
-            from User
-            where accountId = :accountId
+            select id as id, username as name
+            from Account
+            where id = :accountId
             """)
     Optional<SellerProjection> findSeller(Long accountId);
 

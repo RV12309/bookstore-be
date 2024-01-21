@@ -32,6 +32,7 @@ import org.thymeleaf.context.Context;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -463,7 +464,8 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize()).withSort(sortBy);
 
         Page<OrderDetails> orders = switch (userType) {
-            case CUSTOMER -> orderDetailsRepository.findAllByUserIdOrderByCreatedAtDesc(currentAccount.getUserId(), pageable);
+            case CUSTOMER ->
+                    orderDetailsRepository.findAllByUserIdOrderByCreatedAtDesc(currentAccount.getUserId(), pageable);
             case SELLER -> orderDetailsRepository.findAllBySellerIdOrderByCreatedAtDesc(id, pageable);
             default -> new PageImpl<>(List.of());
         };
@@ -554,15 +556,10 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                 }
             }
             case QUARTER -> {
-                LocalDateTime now = LocalDateTime.now();
-                if (isNull(from)) {
-                    from = now.minusMonths(3);
-                }
-                if (isNull(to)) {
-                    to = now;
-                }
+                Date now = new Date();
+                Date fromQuarter = new Date(now.getYear(), now.getMonth() - 3, now.getDate());
 
-                List<StatOderProjection> days = orderDetailsRepository.statisticOrderQuater(from, to, id);
+                List<StatOderProjection> days = orderDetailsRepository.statisticOrderQuater(fromQuarter, now, id);
                 //Map local date time to total order , key is local date time with start week
                 for (StatOderProjection month : days) {
                     responses.add(OrderStatisticResponse.builder()
@@ -574,15 +571,18 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
 
             }
             case YEAR -> {
-                LocalDateTime now = LocalDateTime.now();
-                if (isNull(from)) {
-                    from = now.minusYears(1);
-                }
-                if (isNull(to)) {
-                    to = now;
-                }
+//                LocalDateTime now = LocalDateTime.now();
+//                if (isNull(from)) {
+//                    from = now.minusYears(1);
+//                }
+//                if (isNull(to)) {
+//                    to = now;
+//                }
 
-                List<StatOderProjection> years = orderDetailsRepository.statisticOrderYear(from, to, id);
+                Date now = new Date();
+                Date fromYear = new Date(now.getYear() - 1, now.getMonth(), now.getDate());
+
+                List<StatOderProjection> years = orderDetailsRepository.statisticOrderYear(fromYear, now, id);
                 for (StatOderProjection month : years) {
                     responses.add(OrderStatisticResponse.builder()
                             .time(month.getTime())

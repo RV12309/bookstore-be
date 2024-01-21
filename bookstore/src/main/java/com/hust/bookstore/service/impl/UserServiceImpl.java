@@ -99,6 +99,16 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
         account.setUpdatedBy(email);
         accountRepository.save(account);
         log.info("Create account successfully");
+        User user = new User();
+        user.setAccountId(account.getId());
+        user.setType(userType);
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
+        user.setCreatedBy(email);
+        user.setUpdatedBy(email);
+        User saved = userRepository.save(user);
+        log.info("Create user successfully");
+        account.setUserId(saved.getId());
         sendNotificationEmail(account, verificationCode);
         return ResponseEntity.ok(new BaseResponse<>(SUCCESS.code(), SUCCESS.message(), "Tạo tài khoản thành công"));
     }
@@ -119,6 +129,7 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
     public void updateUser(UpdateUserRequest request) {
         Long id = request.getId();
         log.info("Update user with id: {}", id);
+        request.setId(null);
         Account account = authService.getCurrentAccountLogin();
         Account currentAccount = accountRepository.findById(account.getId())
                 .orElseThrow(() -> new BusinessException(ACCOUNT_NOT_FOUND));
@@ -137,8 +148,8 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
         }
         user.setAccountId(currentAccount.getId());
         user.setType(currentAccount.getType());
-        userRepository.save(user);
-        currentAccount.setUserId(user.getId());
+        User saved = userRepository.save(user);
+        currentAccount.setUserId(saved.getId());
         accountRepository.save(currentAccount);
         log.info("Update user successfully");
     }
