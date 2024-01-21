@@ -44,8 +44,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetails, Long>
             "       COUNT(*) AS totalOrder, " +
             "       COALESCE(SUM(total), 0) AS totalAmount " +
             "FROM month_range mr " +
-            "LEFT JOIN order_details od ON month(od.created_at, '%Y-%m-%d') = month(mr.month_value )" +
-            "WHERE od.created_at BETWEEN :startDate AND :endDate " +
+            "LEFT JOIN order_details od ON month(od.created_at) = month(mr.month_value )" +
             "AND (od.seller_id = :id OR :id IS NULL) " +
             "GROUP BY time " +
             "ORDER BY time", nativeQuery = true)
@@ -62,8 +61,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetails, Long>
             "       COUNT(*) AS totalOrder, " +
             "       COALESCE(SUM(total), 0) AS totalAmount " +
             "FROM month_range mr " +
-            "LEFT JOIN order_details od ON month(od.created_at, '%Y-%m-%d') = month(mr.month_value ) " +
-            "WHERE od.created_at BETWEEN :startDate AND :endDate " +
+            "LEFT JOIN order_details od ON month(od.created_at) = month(mr.month_value ) " +
             "AND (od.seller_id = :id OR :id IS NULL) " +
             "GROUP BY time " +
             "ORDER BY time", nativeQuery = true)
@@ -105,8 +103,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetails, Long>
             "       COUNT(*) AS totalOrder, " +
             "       COALESCE(SUM(total), 0) AS totalAmount " +
             "FROM month_range mr " +
-            "LEFT JOIN order_details od ON hour(od.created_at, '%Y-%m-%d %H:00:00') = hour(mr.month_value ) " +
-            "WHERE od.created_at BETWEEN :startDate AND :endDate " +
+            "LEFT JOIN order_details od ON hour(od.created_at) = hour(mr.month_value ) " +
             "AND (od.seller_id = :id OR :id IS NULL) " +
             "GROUP BY time " +
             "ORDER BY time", nativeQuery = true)

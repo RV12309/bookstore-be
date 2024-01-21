@@ -109,6 +109,7 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
         User saved = userRepository.save(user);
         log.info("Create user successfully");
         account.setUserId(saved.getId());
+        accountRepository.save(account);
         sendNotificationEmail(account, verificationCode);
         return ResponseEntity.ok(new BaseResponse<>(SUCCESS.code(), SUCCESS.message(), "Tạo tài khoản thành công"));
     }
