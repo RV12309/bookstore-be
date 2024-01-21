@@ -583,7 +583,7 @@ public class OrdersServiceImpl extends BusinessHelper implements OrdersService {
                     to = now;
                 }
 
-                List<StatOderProjection> years = orderDetailsRepository.statisticOrderYear(to, now, id);
+                List<StatOderProjection> years = orderDetailsRepository.statisticOrderYear(from, to, id);
                 for (StatOderProjection month : years) {
                     responses.add(OrderStatisticResponse.builder()
                             .time(month.getTime())

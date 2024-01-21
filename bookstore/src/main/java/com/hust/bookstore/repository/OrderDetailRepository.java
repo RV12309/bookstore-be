@@ -41,7 +41,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetails, Long>
             "    WHERE month_value < DATE_FORMAT(:endDate, '%Y-%m-%d') " +
             ") " +
             "SELECT mr.month_value AS time, " +
-            "       COUNT(*) AS totalOrder, " +
+            "       coalesce(COUNT(od.id), 0) AS totalOrder, " +
             "       COALESCE(SUM(total), 0) AS totalAmount " +
             "FROM month_range mr " +
             "LEFT JOIN order_details od ON month(od.created_at) = month(mr.month_value )" +
@@ -100,7 +100,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetails, Long>
             "    WHERE month_value < DATE_FORMAT(:endDate, '%Y-%m-%d %H:00:00') " +
             ") " +
             "SELECT mr.month_value AS time, " +
-            "       COUNT(*) AS totalOrder, " +
+            "       coalesce(COUNT(od.id), 0) AS totalOrder, " +
             "       COALESCE(SUM(total), 0) AS totalAmount " +
             "FROM month_range mr " +
             "LEFT JOIN order_details od ON hour(od.created_at) = hour(mr.month_value ) " +
