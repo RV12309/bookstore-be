@@ -27,13 +27,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("select u " +
             "from User u " +
             "where " +
-            "u.type is not null")
+            "u.type is not null and u.type <> 'ADMIN' and u.type <> 'GUEST'")
     Page<User> searchUsers(Pageable pageable);
 
     @Query("select u " +
             "from User u " +
             "where " +
-            "u.type = 'CUSTOMER' or u.type = 'GUEST' ")
+            "u.type = 'CUSTOMER'")
     Page<User> searchUsersCustomer(Pageable pageable);
 
     @Query("""
