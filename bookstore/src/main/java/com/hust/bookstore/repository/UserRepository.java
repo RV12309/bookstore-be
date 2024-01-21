@@ -44,7 +44,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             select count(u)
             from User u
             inner join Account a on u.accountId = a.id
-            where u.type = :userType
+            where u.type = :userType and u.accountId is not null
             """)
     long countAccount(UserType userType);
 }

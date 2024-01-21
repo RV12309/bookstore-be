@@ -1,6 +1,7 @@
 package com.hust.bookstore.repository;
 
 import com.hust.bookstore.entity.Account;
+import com.hust.bookstore.enumration.UserType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -20,4 +21,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
             where a.userId in :ids
             """)
     List<Account> findAllByUserIdIn(List<Long> ids);
+
+    long countByType(UserType userType);
 }

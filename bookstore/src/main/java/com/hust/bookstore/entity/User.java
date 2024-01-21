@@ -31,17 +31,19 @@ public class User {
     private String avatarUrl;
 
     private LocalDateTime dob;
-    @Enumerated(EnumType.STRING)
 
+    @Enumerated(EnumType.STRING)
     private Gender gender;
-    @Enumerated(EnumType.STRING)
 
+    @Enumerated(EnumType.STRING)
     private UserType type;
+
     @Column(name = "account_id")
     private Long accountId;
 
     @Column(name = "province_id")
     private Long provinceId;
+
     @Column(name = "district_id")
     private Long districtId;
 

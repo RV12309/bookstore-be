@@ -12,7 +12,6 @@ import com.hust.bookstore.enumration.UserType;
 import com.hust.bookstore.exception.BusinessException;
 import com.hust.bookstore.helper.BusinessHelper;
 import com.hust.bookstore.repository.*;
-import com.hust.bookstore.repository.projection.StatUserProjection;
 import com.hust.bookstore.service.AuthService;
 import com.hust.bookstore.service.NotificationService;
 import com.hust.bookstore.service.UserService;
@@ -227,7 +226,7 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
                 userStatisticRes = new ArrayList<>();
         log.info("Found {} ", userStatisticRes);
 
-        long countCustomer = userRepository.countAccount(UserType.CUSTOMER);
+        long countCustomer = accountRepository.countByType(UserType.CUSTOMER);
         userStatisticRes.add(CountUserStatisticResponse.builder()
                 .type(UserType.CUSTOMER)
                 .count(countCustomer)
@@ -237,7 +236,7 @@ public class UserServiceImpl extends BusinessHelper implements UserService {
                 .type(UserType.GUEST)
                 .count(countGuest)
                 .build());
-        long countSeller = userRepository.countAccount(UserType.SELLER);
+        long countSeller = accountRepository.countByType(UserType.SELLER);
         userStatisticRes.add(CountUserStatisticResponse.builder()
                 .type(UserType.SELLER)
                 .count(countSeller)

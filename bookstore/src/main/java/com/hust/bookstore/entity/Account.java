@@ -36,8 +36,8 @@ public class Account extends BaseEntity {
 
     @Column(name = "email", unique = true)
     private String email;
-    @Column(name = "type")
 
+    @Column(name = "type")
     @Enumerated(EnumType.STRING)
     private UserType type;
 
