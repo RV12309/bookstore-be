@@ -8,6 +8,7 @@ import com.hust.bookstore.dto.response.BookResponse;
 import com.hust.bookstore.dto.response.CategoryResponse;
 import com.hust.bookstore.entity.*;
 import com.hust.bookstore.enumration.ResponseCode;
+import com.hust.bookstore.enumration.UserType;
 import com.hust.bookstore.exception.BusinessException;
 import com.hust.bookstore.helper.BusinessHelper;
 import com.hust.bookstore.repository.*;
@@ -160,6 +161,16 @@ public class BooksServiceImpl extends BusinessHelper implements BooksService {
         String author = StringUtils.isBlank(request.getAuthor()) ? "%" : "%" + request.getAuthor() + "%";
         request.setTitle(title);
         request.setAuthor(author);
+        Account currentAccount = authService.getCurrentAccountLogin();
+        Long id = null;
+
+        if (currentAccount != null) {
+            Account account = accountRepository.findById(currentAccount.getId()).orElse(null);
+            if (account != null && (account.getType() == UserType.SELLER)) {
+                    id = account.getId();
+
+            }
+        }
 
         List<String> sort = request.getSort();
         if (CollectionUtils.isEmpty(sort)) {
@@ -170,7 +181,7 @@ public class BooksServiceImpl extends BusinessHelper implements BooksService {
         Sort sortBy = Sort.by(sort.stream().map(Sort.Order::by).toList());
 
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize()).withSort(sortBy);
-        Page<Book> books = bookRepository.searchBooks(request, pageable);
+        Page<Book> books = bookRepository.searchBooks(request, id, pageable);
         List<Book> content = books.getContent();
         List<Long> accountIds = content.stream().map(Book::getAccountId).distinct().toList();
         Map<Long, String> accountMap = new HashMap<>();
